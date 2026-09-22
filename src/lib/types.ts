@@ -52,6 +52,8 @@ export interface ReadingResult {
   onboarding: OnboardingAnswers;
   cards: DrawnCard[];
   interpretation: string;
+  /** How the interpretation was produced */
+  interpretationSource?: "ai" | "template";
 }
 
 export const CONCERN_LABELS: Record<ConcernCategory, string> = {
