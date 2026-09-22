@@ -1,60 +1,78 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getUser, clearUser } from "@/lib/storage";
-import type { User } from "@/lib/types";
-import { useRouter } from "next/navigation";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function Header() {
-  const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    setUser(getUser());
-  }, []);
-
-  function handleLogout() {
-    clearUser();
-    setUser(null);
-    router.push("/");
-  }
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-violet-900/40 bg-[#0b0614]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-wide text-amber-200">
-          <span className="text-lg" aria-hidden>
+    <header className="site-header sticky top-0 z-40">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-semibold tracking-wide text-accent shrink-0"
+        >
+          <span className="text-lg leading-none" aria-hidden>
             ✦
           </span>
-          <span>별빛 타로</span>
+          <span className="text-[15px] sm:text-base">별빛 타로</span>
         </Link>
-        <nav className="flex items-center gap-3 text-sm text-violet-200">
-          {user ? (
-            <>
-              <Link href="/draw" className="hover:text-amber-200 transition-colors">
-                뽑기
-              </Link>
-              <Link href="/history" className="hover:text-amber-200 transition-colors">
-                기록
-              </Link>
-              <span className="hidden sm:inline text-violet-400">{user.name}님</span>
+
+        <nav className="flex items-center gap-2 sm:gap-3 text-sm text-body">
+          <SignedIn>
+            <Link
+              href="/draw"
+              className="hover:text-[var(--accent-gold)] transition-colors px-1"
+            >
+              뽑기
+            </Link>
+            <Link
+              href="/history"
+              className="hover:text-[var(--accent-gold)] transition-colors px-1"
+            >
+              기록
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+
+          <SignedOut>
+            <SignInButton mode="redirect" forceRedirectUrl="/onboarding">
               <button
                 type="button"
-                onClick={handleLogout}
-                className="rounded-full border border-violet-700/60 px-3 py-1 text-xs hover:border-amber-400/60 hover:text-amber-200 transition-colors"
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-white transition-colors"
+                style={{ background: "var(--accent-violet-soft)" }}
               >
-                로그아웃
+                시작하기
               </button>
-            </>
-          ) : (
-            <Link
-              href="/auth"
-              className="rounded-full bg-violet-700/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-600 transition-colors"
-            >
-              시작하기
-            </Link>
-          )}
+            </SignInButton>
+          </SignedOut>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="theme-toggle"
+            aria-label={
+              theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"
+            }
+            title={theme === "dark" ? "라이트 모드" : "다크 모드"}
+          >
+            {theme === "dark" ? (
+              <span aria-hidden className="text-sm">
+                ☀
+              </span>
+            ) : (
+              <span aria-hidden className="text-sm">
+                ☾
+              </span>
+            )}
+          </button>
         </nav>
       </div>
     </header>
