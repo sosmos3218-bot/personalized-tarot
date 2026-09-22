@@ -3,8 +3,8 @@
 :root {
   --background: #0b0614;
   --foreground: #e8e0f5;
-  --accent-gold: #f5d78e;
-  --accent-violet: #a78bfa;
+  --gold: #f5d78e;
+  --violet-glow: #a78bfa;
 }
 
 @theme inline {
@@ -21,7 +21,7 @@ body {
   min-height: 100vh;
 }
 
-/* mystical ambient glow */
+/* mystical background glow */
 .mystic-bg {
   background:
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.25), transparent),
