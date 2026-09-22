@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import AuthGate from "@/components/AuthGate";
 import { saveOnboarding } from "@/lib/storage";
 import type {
@@ -25,6 +26,7 @@ export default function OnboardingPage() {
 
 function OnboardingForm() {
   const router = useRouter();
+  const { userId } = useAuth();
   const [step, setStep] = useState(0);
   const [concern, setConcern] = useState<ConcernCategory | null>(null);
   const [mood, setMood] = useState<MoodFeeling | null>(null);
@@ -32,7 +34,7 @@ function OnboardingForm() {
 
   function finish() {
     if (!concern || !mood || !goal) return;
-    saveOnboarding({ concern, mood, goal });
+    saveOnboarding({ concern, mood, goal }, userId);
     router.push("/draw");
   }
 
@@ -43,27 +45,25 @@ function OnboardingForm() {
   ];
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
+    <div className="mx-auto max-w-lg space-y-6 animate-fade-up">
       <div className="text-center">
-        <p className="text-xs tracking-widest text-amber-300/70">
+        <p className="text-[11px] tracking-[0.22em] text-accent font-medium">
           ONBOARDING {step + 1} / 3
         </p>
-        <h1 className="mt-2 text-xl font-bold text-amber-100 sm:text-2xl">
+        <h1 className="mt-2 text-xl font-bold text-heading sm:text-2xl leading-snug px-1">
           {titles[step]}
         </h1>
-        <div className="mx-auto mt-4 flex max-w-xs gap-2">
+        <div className="mx-auto mt-5 flex max-w-xs gap-2">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className={`h-1 flex-1 rounded-full ${
-                i <= step ? "bg-amber-400" : "bg-violet-900"
-              }`}
+              className={`progress-track ${i <= step ? "progress-fill" : ""}`}
             />
           ))}
         </div>
       </div>
 
-      <div className="card-panel space-y-3">
+      <div className="card-panel space-y-2.5 !p-4 sm:!p-5">
         {step === 0 &&
           CONCERNS.map((key) => (
             <ChoiceButton
@@ -95,7 +95,11 @@ function OnboardingForm() {
 
       <div className="flex gap-3">
         {step > 0 && (
-          <button type="button" className="btn-secondary flex-1" onClick={() => setStep(step - 1)}>
+          <button
+            type="button"
+            className="btn-secondary flex-1"
+            onClick={() => setStep(step - 1)}
+          >
             이전
           </button>
         )}
@@ -103,9 +107,7 @@ function OnboardingForm() {
           <button
             type="button"
             className="btn-primary flex-1"
-            disabled={
-              (step === 0 && !concern) || (step === 1 && !mood)
-            }
+            disabled={(step === 0 && !concern) || (step === 1 && !mood)}
             onClick={() => setStep(step + 1)}
           >
             다음
@@ -138,11 +140,7 @@ function ChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
-        selected
-          ? "border-amber-400/70 bg-violet-800/50 text-amber-100"
-          : "border-violet-800/60 bg-[#12081f]/60 text-violet-200 hover:border-violet-500"
-      }`}
+      className={`choice-btn ${selected ? "choice-btn-selected" : ""}`}
     >
       {label}
     </button>
