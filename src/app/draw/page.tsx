@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import AuthGate from "@/components/AuthGate";
 import TarotCardFace from "@/components/TarotCardFace";
 import { drawRandomCards } from "@/lib/cards";
@@ -22,6 +23,7 @@ export default function DrawPage() {
 
 function DrawFlow() {
   const router = useRouter();
+  const { userId } = useAuth();
   const [spread, setSpread] = useState<SpreadType | null>(null);
   const [phase, setPhase] = useState<Phase>("choose");
   const [drawn, setDrawn] = useState<DrawnCard[]>([]);
@@ -60,11 +62,12 @@ function DrawFlow() {
       setRevealedCount(i);
       if (i >= total) {
         clearInterval(interval);
-        const onboarding = getOnboarding();
+        const onboarding = getOnboarding(userId);
         if (!onboarding) {
           router.push("/onboarding");
           return;
         }
+        // Save with template first; result page upgrades via /api/interpret
         const interpretation = buildInterpretation(drawn, onboarding, spread);
         const reading = {
           id: createReadingId(),
@@ -73,6 +76,7 @@ function DrawFlow() {
           onboarding,
           cards: drawn,
           interpretation,
+          interpretationSource: "template" as const,
         };
         saveReading(reading);
         setTimeout(() => {
@@ -83,36 +87,41 @@ function DrawFlow() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className="mx-auto max-w-lg space-y-8 animate-fade-up">
       <div className="text-center">
-        <p className="text-xs tracking-widest text-amber-300/70">DRAW</p>
-        <h1 className="mt-2 text-2xl font-bold text-amber-100">카드 뽑기</h1>
-        <p className="mt-2 text-sm text-violet-300">
+        <p className="text-[11px] tracking-[0.22em] text-accent font-medium">
+          DRAW
+        </p>
+        <h1 className="mt-2 text-2xl font-bold text-heading">카드 뽑기</h1>
+        <p className="mt-2 text-sm text-body px-2">
           스프레드를 고른 뒤, 마음을 가라앉히고 카드를 뽑아보세요.
         </p>
       </div>
 
       {phase === "choose" && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {(Object.keys(SPREAD_LABELS) as SpreadType[]).map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => startShuffle(key)}
-              className="card-panel w-full text-left transition hover:border-amber-400/40"
+              className="card-panel w-full text-left transition hover:border-[var(--accent-gold-bright)] !p-5"
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="font-semibold text-amber-100">
+                  <h2 className="font-semibold text-heading">
                     {SPREAD_LABELS[key]}
                   </h2>
-                  <p className="mt-1 text-sm text-violet-300">
+                  <p className="mt-1.5 text-sm text-body leading-relaxed">
                     {key === "one"
                       ? "한 장의 카드로 오늘의 핵심 메시지를 받습니다."
                       : "과거·현재·미래 흐름을 세 장으로 읽습니다."}
                   </p>
                 </div>
-                <span className="text-2xl text-violet-400" aria-hidden>
+                <span
+                  className="text-2xl text-accent-violet shrink-0"
+                  aria-hidden
+                >
                   {key === "one" ? "Ⅰ" : "Ⅲ"}
                 </span>
               </div>
@@ -127,21 +136,24 @@ function DrawFlow() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="animate-shuffle absolute inset-0 rounded-xl border border-violet-600 bg-gradient-to-br from-violet-900 to-indigo-950"
+                className="animate-shuffle absolute inset-0 rounded-xl border shadow-lg"
                 style={{
+                  borderColor: "var(--card-back-border)",
+                  background:
+                    "linear-gradient(145deg, #4c1d95 0%, #1e1b4b 55%, #0f0a1a 100%)",
                   animationDelay: `${i * 0.1}s`,
                   transform: `translateX(${(i - 1) * 8}px) rotate(${(i - 1) * 4}deg)`,
                 }}
               />
             ))}
           </div>
-          <p className="animate-pulse text-violet-200">카드를 섞는 중…</p>
+          <p className="animate-pulse text-body">카드를 섞는 중…</p>
         </div>
       )}
 
       {(phase === "ready" || phase === "revealing") && (
         <div className="space-y-8">
-          <div className="flex flex-wrap items-end justify-center gap-4">
+          <div className="flex flex-wrap items-end justify-center gap-3 sm:gap-4">
             {drawn.map((d, i) => (
               <TarotCardFace
                 key={`${d.card.id}-${i}`}
@@ -155,12 +167,16 @@ function DrawFlow() {
 
           {phase === "ready" && (
             <div className="flex flex-col items-center gap-3">
-              <button type="button" className="btn-primary animate-glow" onClick={revealCards}>
+              <button
+                type="button"
+                className="btn-primary animate-glow min-w-[10rem]"
+                onClick={revealCards}
+              >
                 ✦ 뽑기
               </button>
               <button
                 type="button"
-                className="text-sm text-violet-400 hover:text-violet-200"
+                className="text-sm text-muted hover:text-body transition-colors"
                 onClick={() => {
                   setPhase("choose");
                   setSpread(null);
@@ -173,7 +189,7 @@ function DrawFlow() {
           )}
 
           {phase === "revealing" && (
-            <p className="text-center animate-pulse text-violet-200">
+            <p className="text-center animate-pulse text-body">
               카드를 공개하는 중…
             </p>
           )}
