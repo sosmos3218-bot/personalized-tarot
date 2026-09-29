@@ -9,6 +9,54 @@ import type { CalendarType, Gender, SajuProfile } from "@/lib/saju";
 import { SAJU_DISCLAIMER } from "@/lib/saju";
 import { getOnboarding, getSajuProfile, saveSajuProfile } from "@/lib/storage";
 
+const YEAR_MIN = 1900;
+const YEAR_MAX = 2100;
+const DEFAULT_YEAR = 1990;
+const DEFAULT_MONTH = 1;
+const DEFAULT_DAY = 1;
+
+const selectStyle = {
+  background: "var(--input-bg)",
+  borderColor: "var(--input-border)",
+  color: "var(--foreground)",
+} as const;
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+function toYmd(year: number, month: number, day: number): string {
+  return `${year}-${pad2(month)}-${pad2(day)}`;
+}
+
+function parseYmd(s: string): { year: number; month: number; day: number } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (
+    year < YEAR_MIN ||
+    year > YEAR_MAX ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth(year, month)
+  ) {
+    return null;
+  }
+  return { year, month, day };
+}
+
+const YEAR_OPTIONS = Array.from(
+  { length: YEAR_MAX - YEAR_MIN + 1 },
+  (_, i) => YEAR_MIN + i
+);
+
 export default function SajuPage() {
   return (
     <AuthGate>
@@ -20,7 +68,9 @@ export default function SajuPage() {
 function SajuForm() {
   const router = useRouter();
   const { userId } = useAuth();
-  const [birthDate, setBirthDate] = useState("");
+  const [year, setYear] = useState(DEFAULT_YEAR);
+  const [month, setMonth] = useState(DEFAULT_MONTH);
+  const [day, setDay] = useState(DEFAULT_DAY);
   const [birthTime, setBirthTime] = useState("");
   const [timeUnknown, setTimeUnknown] = useState(true);
   const [gender, setGender] = useState<Gender>("unspecified");
@@ -29,11 +79,23 @@ function SajuForm() {
   const [existing, setExisting] = useState<SajuProfile | null>(null);
   const [preview, setPreview] = useState<SajuProfile | null>(null);
 
+  const maxDay = daysInMonth(year, month);
+  const birthDate = toYmd(year, month, Math.min(day, maxDay));
+
+  useEffect(() => {
+    if (day > maxDay) setDay(maxDay);
+  }, [day, maxDay]);
+
   useEffect(() => {
     const profile = getSajuProfile(userId);
     if (profile) {
       setExisting(profile);
-      setBirthDate(profile.input.birthDate);
+      const parsed = parseYmd(profile.input.birthDate);
+      if (parsed) {
+        setYear(parsed.year);
+        setMonth(parsed.month);
+        setDay(parsed.day);
+      }
       setBirthTime(profile.input.birthTime ?? "");
       setTimeUnknown(Boolean(profile.input.timeUnknown) || !profile.input.birthTime);
       setGender(profile.input.gender ?? "unspecified");
@@ -111,20 +173,59 @@ function SajuForm() {
           <label className="mb-1.5 block text-sm font-medium text-heading">
             생년월일 <span className="text-accent">*</span>
           </label>
-          <input
-            type="date"
-            value={birthDate}
-            min="1900-01-01"
-            max="2100-12-31"
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none"
-            style={{
-              background: "var(--input-bg)",
-              borderColor: "var(--input-border)",
-              color: "var(--foreground)",
-            }}
-            required
-          />
+          <div className="grid grid-cols-3 gap-2">
+            <label className="sr-only" htmlFor="saju-birth-year">
+              년
+            </label>
+            <select
+              id="saju-birth-year"
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="w-full rounded-xl border px-2 py-2.5 text-sm outline-none"
+              style={selectStyle}
+              required
+            >
+              {YEAR_OPTIONS.map((y) => (
+                <option key={y} value={y}>
+                  {y}년
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="saju-birth-month">
+              월
+            </label>
+            <select
+              id="saju-birth-month"
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
+              className="w-full rounded-xl border px-2 py-2.5 text-sm outline-none"
+              style={selectStyle}
+              required
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={m}>
+                  {m}월
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="saju-birth-day">
+              일
+            </label>
+            <select
+              id="saju-birth-day"
+              value={Math.min(day, maxDay)}
+              onChange={(e) => setDay(Number(e.target.value))}
+              className="w-full rounded-xl border px-2 py-2.5 text-sm outline-none"
+              style={selectStyle}
+              required
+            >
+              {Array.from({ length: maxDay }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={d}>
+                  {d}일
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>
@@ -182,11 +283,7 @@ function SajuForm() {
               setTimeUnknown(false);
             }}
             className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none disabled:opacity-50"
-            style={{
-              background: "var(--input-bg)",
-              borderColor: "var(--input-border)",
-              color: "var(--foreground)",
-            }}
+            style={selectStyle}
           />
         </div>
 
@@ -197,9 +294,9 @@ function SajuForm() {
           <div className="flex gap-2">
             {(
               [
-                ["unspecified", "미지정"],
-                ["female", "여"],
                 ["male", "남"],
+                ["female", "여"],
+                ["unspecified", "미지정"],
               ] as const
             ).map(([key, label]) => (
               <button
