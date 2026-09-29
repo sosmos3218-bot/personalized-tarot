@@ -81,7 +81,8 @@ function yearPillar(y: number, m: number, d: number): Pillar {
 /** 월지: 절기 근사 경계. 월간: 연간에 따른 오호둔(五虎遁) */
 function monthPillar(y: number, m: number, d: number, yearStemIndex: number): Pillar {
   const md = m * 100 + d;
-  let branchIndex = 1;
+  // 절기 순회: 입춘(204)부터. 소한(106)~입춘 전은 축월(전년 소속 월주로 이미 연주 보정됨)
+  let branchIndex = 1; // 丑 default before 입춘
   const ordered = [
     { key: 204, b: 2 },
     { key: 306, b: 3 },
@@ -94,22 +95,26 @@ function monthPillar(y: number, m: number, d: number, yearStemIndex: number): Pi
     { key: 1008, b: 10 },
     { key: 1107, b: 11 },
     { key: 1207, b: 0 },
-    { key: 106, b: 1 },
+    { key: 106, b: 1 }, // 소한 — 연초 丑月 (1/6 이후; 1/1–1/5도 축월로 봄)
   ];
 
+  // Find latest term whose key <= md, handling year wrap for 소한
   if (md >= 204) {
     for (const t of ordered) {
       if (t.key >= 204 && md >= t.key) branchIndex = t.b;
     }
   } else if (md >= 106) {
-    branchIndex = 1;
+    branchIndex = 1; // 丑
   } else {
-    branchIndex = 1;
+    branchIndex = 1; // 1/1–1/5: still 丑 (대설 이후)
   }
 
-  const monthOrder = [11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const monthNum = monthOrder[branchIndex];
+  // 寅=2 가 첫 월(인월). 월 순서 offset from 寅:
+  // 寅2,卯3,辰4,巳5,午6,未7,申8,酉9,戌10,亥11,子0,丑1
+  const monthOrder = [11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // index by branch: 子→11 …
+  const monthNum = monthOrder[branchIndex]; // 1=寅 … 12=丑
 
+  // 五虎遁: 甲己→丙寅, 乙庚→戊寅, 丙辛→庚寅, 丁壬→壬寅, 戊癸→甲寅
   const yinStemByYearStem = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0];
   const stem = (yinStemByYearStem[yearStemIndex] + (monthNum - 1)) % 10;
   return makePillar(stem, branchIndex);
@@ -122,10 +127,12 @@ function hourPillar(
   minute: number
 ): Pillar {
   const totalMin = hour * 60 + minute;
+  // 23:00–00:59 → 子(0); 01:00–02:59 → 丑(1); …
   let branchIndex: number;
   if (totalMin >= 23 * 60 || totalMin < 60) branchIndex = 0;
   else branchIndex = Math.floor((totalMin - 60) / 120) + 1;
 
+  // 甲己→甲, 乙庚→丙, 丙辛→戊, 丁壬→庚, 戊癸→壬
   const ziStemByDayStem = [0, 2, 4, 6, 8, 0, 2, 4, 6, 8];
   const stem = (ziStemByDayStem[dayStemIndex] + branchIndex) % 10;
   return makePillar(stem, branchIndex);
@@ -269,4 +276,11 @@ export function sajuPromptBlock(profile: SajuProfile | null | undefined): string
     `고지: ${SAJU_DISCLAIMER}`,
   ];
   return lines.filter(Boolean).join("\n");
+}
+
+
+/** 양력 YYYY-MM-DD의 일주(日柱) — 오늘의 운세 등에서 재사용 */
+export function getDayPillarForSolarDate(ymd: string): Pillar {
+  const { y, m, d } = parseYmd(ymd);
+  return dayPillar(y, m, d);
 }
