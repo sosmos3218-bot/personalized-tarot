@@ -7,7 +7,7 @@ import AuthGate from "@/components/AuthGate";
 import TarotCardFace from "@/components/TarotCardFace";
 import { drawRandomCards } from "@/lib/cards";
 import { buildInterpretation, createReadingId } from "@/lib/interpretation";
-import { getOnboarding, saveReading } from "@/lib/storage";
+import { getOnboarding, getSajuProfile, saveReading } from "@/lib/storage";
 import type { DrawnCard, SpreadType } from "@/lib/types";
 import { SPREAD_LABELS, THREE_CARD_POSITIONS } from "@/lib/types";
 
@@ -15,7 +15,7 @@ type Phase = "choose" | "shuffling" | "ready" | "revealing";
 
 export default function DrawPage() {
   return (
-    <AuthGate requireOnboarding>
+    <AuthGate requireOnboarding requireSaju>
       <DrawFlow />
     </AuthGate>
   );
@@ -67,8 +67,13 @@ function DrawFlow() {
           router.push("/onboarding");
           return;
         }
+        const saju = getSajuProfile(userId);
+        if (!saju) {
+          router.push("/saju");
+          return;
+        }
         // Save with template first; result page upgrades via /api/interpret
-        const interpretation = buildInterpretation(drawn, onboarding, spread);
+        const interpretation = buildInterpretation(drawn, onboarding, spread, saju);
         const reading = {
           id: createReadingId(),
           createdAt: new Date().toISOString(),
@@ -77,6 +82,7 @@ function DrawFlow() {
           cards: drawn,
           interpretation,
           interpretationSource: "template" as const,
+          sajuSummary: saju.summaryText,
         };
         saveReading(reading);
         setTimeout(() => {
