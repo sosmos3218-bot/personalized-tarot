@@ -18,7 +18,7 @@ const GOALS = Object.keys(GOAL_LABELS) as ReadingGoal[];
 
 export default function OnboardingPage() {
   return (
-    <AuthGate>
+    <AuthGate requireSaju>
       <OnboardingForm />
     </AuthGate>
   );
