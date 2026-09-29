@@ -92,7 +92,18 @@ function HistoryList() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-heading">
-                        {SPREAD_LABELS[r.spread]}
+                        {r.tags?.includes("daily") ? "오늘의 타로" : SPREAD_LABELS[r.spread]}
+                        {r.tags?.includes("daily") && (
+                          <span
+                            className="ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wide"
+                            style={{
+                              background: "var(--chip-bg)",
+                              color: "var(--accent-gold)",
+                            }}
+                          >
+                            DAILY
+                          </span>
+                        )}
                       </p>
                       <p className="mt-1 text-xs text-body truncate">
                         {CONCERN_LABELS[r.onboarding.concern]} · {cardNames}

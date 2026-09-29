@@ -31,13 +31,16 @@ export default function LandingPage() {
         </p>
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
           <Link
-            href={loggedIn ? "/draw" : "/sign-up"}
+            href={loggedIn ? "/today" : "/sign-up"}
             className="btn-primary w-full sm:w-auto animate-glow"
           >
-            {loggedIn ? "카드 뽑으러 가기" : "무료로 시작하기"}
+            {loggedIn ? "오늘의 운세 보기" : "무료로 시작하기"}
           </Link>
-          <Link href="#how" className="btn-secondary w-full sm:w-auto">
-            이용 방법 보기
+          <Link
+            href={loggedIn ? "/draw" : "#how"}
+            className="btn-secondary w-full sm:w-auto"
+          >
+            {loggedIn ? "카드 뽑기" : "이용 방법 보기"}
           </Link>
         </div>
 
@@ -104,6 +107,13 @@ export default function LandingPage() {
             <span>
               <strong className="text-heading">타로+사주 퓨전</strong> — 일간·오행
               요약과 메이저 아르카나를 함께 읽습니다.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent shrink-0">·</span>
+            <span>
+              <strong className="text-heading">오늘의 운세</strong> — 서울 날짜
+              기준 일간·오행 톤과 운세 점수, 선택적 일일 타로 1장을 제공합니다.
             </span>
           </li>
           <li className="flex gap-2">

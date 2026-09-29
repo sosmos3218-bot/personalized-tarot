@@ -49,13 +49,15 @@ export interface ReadingResult {
   id: string;
   createdAt: string;
   spread: SpreadType;
-  onboarding: OnboardingAnswers;
   cards: DrawnCard[];
+  onboarding: OnboardingAnswers;
   interpretation: string;
   /** How the interpretation was produced */
   interpretationSource?: "ai" | "template";
   /** Optional saju summary snapshot at draw time */
   sajuSummary?: string;
+  /** e.g. ["daily"] for 오늘의 타로 */
+  tags?: string[];
 }
 
 export const CONCERN_LABELS: Record<ConcernCategory, string> = {
