@@ -5,6 +5,7 @@ export {
   formatSajuSummary,
   buildSajuProfile,
   sajuPromptBlock,
+  getDayPillarForSolarDate,
 } from "./compute";
 export {
   lunarToSolar,
