@@ -3,11 +3,15 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import AuthGate from "@/components/AuthGate";
 import TarotCardFace from "@/components/TarotCardFace";
+import { SAJU_DISCLAIMER } from "@/lib/saju";
+import type { SajuProfile } from "@/lib/saju";
 import {
   getHistory,
   getLastReading,
+  getSajuProfile,
   updateReadingInterpretation,
 } from "@/lib/storage";
 import type { ReadingResult } from "@/lib/types";
@@ -20,7 +24,7 @@ import {
 
 export default function ResultPage() {
   return (
-    <AuthGate requireOnboarding>
+    <AuthGate requireOnboarding requireSaju>
       <Suspense
         fallback={
           <p className="text-center text-body animate-pulse">불러오는 중…</p>
@@ -34,7 +38,9 @@ export default function ResultPage() {
 
 function ResultContent() {
   const searchParams = useSearchParams();
+  const { userId } = useAuth();
   const [reading, setReading] = useState<ReadingResult | null>(null);
+  const [saju, setSaju] = useState<SajuProfile | null>(null);
   const [source, setSource] = useState<"ai" | "template" | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -48,12 +54,12 @@ function ResultContent() {
     } else {
       setReading(getLastReading());
     }
-  }, [searchParams]);
+    setSaju(getSajuProfile(userId));
+  }, [searchParams, userId]);
 
   useEffect(() => {
     if (!reading) return;
     if (fetchedForId.current === reading.id) return;
-    // Skip re-fetch if already AI-sourced from history
     if (reading.interpretationSource === "ai") {
       setSource("ai");
       fetchedForId.current = reading.id;
@@ -74,6 +80,7 @@ function ResultContent() {
             cards: reading!.cards,
             onboarding: reading!.onboarding,
             spread: reading!.spread,
+            saju: getSajuProfile(userId),
           }),
         });
 
@@ -124,7 +131,7 @@ function ResultContent() {
     return () => {
       cancelled = true;
     };
-  }, [reading]);
+  }, [reading, userId]);
 
   if (!reading) {
     return (
@@ -162,7 +169,7 @@ function ResultContent() {
     <div className="space-y-8 animate-fade-up">
       <div className="text-center">
         <p className="text-[11px] tracking-[0.22em] text-accent font-medium">
-          RESULT
+          RESULT · 타로+사주
         </p>
         <h1 className="mt-2 text-2xl font-bold text-heading">리딩 결과</h1>
         <p className="mt-1.5 text-xs text-muted">{dateLabel} (KST)</p>
@@ -176,25 +183,73 @@ function ResultContent() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-end justify-center gap-3 sm:gap-4">
-        {reading.cards.map((d, i) => (
-          <TarotCardFace
-            key={`${d.card.id}-${i}`}
-            card={d.card}
-            positionLabel={d.positionLabel}
-            revealed
-            size={reading.spread === "three" ? "sm" : "lg"}
-          />
-        ))}
-      </div>
+      {/* 1. 사주 요약 */}
+      <section className="card-panel !p-5 sm:!p-6">
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-heading">
+          <span aria-hidden className="text-accent">
+            ✧
+          </span>
+          사주 요약
+        </h2>
+        {saju ? (
+          <div className="space-y-2 text-sm text-body">
+            <p className="font-medium text-heading">{saju.summaryText}</p>
+            <p>
+              일간 {saju.chart.dayMaster.stemHan}({saju.chart.dayMaster.stemKo})
+              · {saju.chart.dayMaster.yinYangLabel} ·{" "}
+              {saju.chart.dayMaster.elementLabel}
+              <span className="text-muted">
+                {" "}
+                — {saju.chart.dayMaster.elementTrait}
+              </span>
+            </p>
+            <p className="text-xs text-muted">{SAJU_DISCLAIMER}</p>
+            <Link
+              href="/saju"
+              className="inline-block text-xs text-accent hover:underline"
+            >
+              사주 프로필 수정
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm text-body">
+            사주 프로필이 없습니다.{" "}
+            <Link href="/saju" className="text-accent hover:underline">
+              등록하기
+            </Link>
+          </p>
+        )}
+      </section>
 
+      {/* 2. 타로 카드 */}
+      <section className="space-y-4">
+        <h2 className="text-center text-lg font-semibold text-heading flex items-center justify-center gap-2">
+          <span aria-hidden className="text-accent">
+            ✦
+          </span>
+          타로 카드
+        </h2>
+        <div className="flex flex-wrap items-end justify-center gap-3 sm:gap-4">
+          {reading.cards.map((d, i) => (
+            <TarotCardFace
+              key={`${d.card.id}-${i}`}
+              card={d.card}
+              positionLabel={d.positionLabel}
+              revealed
+              size={reading.spread === "three" ? "sm" : "lg"}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* 3. 퓨전 해석 */}
       <section className="card-panel !p-5 sm:!p-7">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-heading">
             <span aria-hidden className="text-accent">
               ✧
             </span>{" "}
-            개인화 해석
+            퓨전 해석
           </h2>
           {loadingAi ? (
             <span className="text-xs text-muted animate-pulse">
@@ -221,11 +276,12 @@ function ResultContent() {
         </div>
 
         {loadingAi && (
-          <div className="mb-4 rounded-xl border border-dashed px-4 py-3 text-sm text-body"
+          <div
+            className="mb-4 rounded-xl border border-dashed px-4 py-3 text-sm text-body"
             style={{ borderColor: "var(--border)" }}
           >
             <p className="animate-pulse">
-              카드를 읽고 있습니다. 잠시만 기다려 주세요…
+              사주 기운과 카드를 읽고 있습니다. 잠시만 기다려 주세요…
             </p>
           </div>
         )}
@@ -251,6 +307,9 @@ function ResultContent() {
         </Link>
         <Link href="/history" className="btn-secondary">
           기록 보기
+        </Link>
+        <Link href="/saju" className="btn-secondary">
+          사주 프로필
         </Link>
         <Link href="/onboarding" className="btn-secondary">
           온보딩 다시하기
