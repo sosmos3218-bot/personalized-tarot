@@ -1,8 +1,10 @@
 import type { OnboardingAnswers, ReadingResult, User } from "./types";
+import type { SajuProfile } from "./saju/types";
 
 const KEYS = {
   user: "tarot_user",
   onboarding: "tarot_onboarding",
+  saju: "tarot_saju",
   history: "tarot_history",
   lastReading: "tarot_last_reading",
 } as const;
@@ -13,6 +15,10 @@ function isBrowser(): boolean {
 
 function onboardingKey(userId?: string | null): string {
   return userId ? `${KEYS.onboarding}:${userId}` : KEYS.onboarding;
+}
+
+function sajuKey(userId?: string | null): string {
+  return userId ? `${KEYS.saju}:${userId}` : KEYS.saju;
 }
 
 /** @deprecated Demo localStorage user — Clerk is the source of truth */
@@ -64,6 +70,38 @@ export function saveOnboarding(
 ): void {
   if (!isBrowser()) return;
   localStorage.setItem(onboardingKey(userId), JSON.stringify(answers));
+}
+
+export function getSajuProfile(userId?: string | null): SajuProfile | null {
+  if (!isBrowser()) return null;
+  try {
+    const keyed = localStorage.getItem(sajuKey(userId));
+    if (keyed) return JSON.parse(keyed) as SajuProfile;
+    if (userId) {
+      const legacy = localStorage.getItem(KEYS.saju);
+      if (legacy) {
+        localStorage.setItem(sajuKey(userId), legacy);
+        return JSON.parse(legacy) as SajuProfile;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveSajuProfile(
+  profile: SajuProfile,
+  userId?: string | null
+): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(sajuKey(userId), JSON.stringify(profile));
+}
+
+export function clearSajuProfile(userId?: string | null): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(sajuKey(userId));
+  if (userId) localStorage.removeItem(KEYS.saju);
 }
 
 export function getHistory(): ReadingResult[] {
