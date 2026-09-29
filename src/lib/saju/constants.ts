@@ -66,7 +66,7 @@ export const SOLAR_TERM_BOUNDS: { month: number; day: number; branchIndex: numbe
   { month: 8, day: 8, branchIndex: 8 }, // 입추 → 申月
   { month: 9, day: 8, branchIndex: 9 }, // 백로 → 酉月
   { month: 10, day: 8, branchIndex: 10 }, // 한로 → 戌月
-  { month: 11, day: 7, branchIndex: 11 }, // 입동 → 亥월
+  { month: 11, day: 7, branchIndex: 11 }, // 입동 → 亥月
   { month: 12, day: 7, branchIndex: 0 }, // 대설 → 子月
   { month: 1, day: 6, branchIndex: 1 }, // 소한 → 丑月
 ];
