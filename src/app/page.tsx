@@ -15,19 +15,19 @@ export default function LandingPage() {
           style={{ borderColor: "var(--border)", background: "var(--surface)" }}
         >
           <span aria-hidden>✦</span>
-          PERSONALIZED TAROT
+          TAROT + SAJU FUSION
         </div>
         <h1 className="mb-4 text-[1.85rem] sm:text-4xl font-bold leading-[1.25] text-heading tracking-tight">
-          나를 위한
+          타로와 사주가
           <br />
-          <span className="hero-gradient-text">별빛 타로</span>
+          <span className="hero-gradient-text">만나는 별빛</span>
         </h1>
         <p className="mx-auto max-w-md text-body leading-relaxed text-[15px] sm:text-base px-1">
-          고민과 기분, 원하는 방향을 알려주시면
+          만세력으로 본 일간·오행 기운과
           <br className="hidden sm:block" />
-          고전 타로 의미와 결합한{" "}
-          <strong className="text-accent font-semibold">개인화 해석</strong>을
-          전해드립니다.
+          고전 타로를 결합한{" "}
+          <strong className="text-accent font-semibold">타로+사주 퓨전</strong>{" "}
+          해석을 전해드립니다.
         </p>
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
           <Link
@@ -67,8 +67,8 @@ export default function LandingPage() {
         {[
           {
             step: "01",
-            title: "간단한 가입",
-            desc: "Clerk로 안전하게 회원가입·로그인합니다.",
+            title: "가입 · 사주",
+            desc: "로그인 후 생년월일로 일간·간지(만세력 MVP)를 등록합니다.",
           },
           {
             step: "02",
@@ -77,8 +77,8 @@ export default function LandingPage() {
           },
           {
             step: "03",
-            title: "개인화 리딩",
-            desc: "1장 또는 3장 스프레드 + AI 맞춤 해석과 기록 저장",
+            title: "퓨전 리딩",
+            desc: "타로 카드 + 사주 기운을 아우르는 AI 해석과 기록 저장",
           },
         ].map((item) => (
           <div key={item.step} className="card-panel text-center !p-5">
@@ -101,33 +101,36 @@ export default function LandingPage() {
         <ul className="space-y-2.5 text-sm text-body leading-relaxed">
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
+            <span>
+              <strong className="text-heading">타로+사주 퓨전</strong> — 일간·오행
+              요약과 메이저 아르카나를 함께 읽습니다.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent shrink-0">·</span>
             <span>메이저 아르카나 22장의 고전 의미를 한국어로 제공합니다.</span>
           </li>
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
             <span>
-              온보딩 답변을 반영한 AI 개인화 해석(실패 시 템플릿 폴백)을
+              온보딩·사주를 반영한 AI 퓨전 해석(실패 시 템플릿 폴백)을
               제공합니다.
             </span>
           </li>
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
             <span>
-              리딩 기록은 기기에 안전하게 저장되며, 언제든 다시 볼 수 있습니다.
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-accent shrink-0">·</span>
-            <span>
-              모바일에서도 편안하게 이용할 수 있는 미스티컬 UI입니다.
+              MVP 만세력은 참고용이며, 전문 명리를 대체하지 않습니다.
             </span>
           </li>
         </ul>
       </section>
 
-      <section className="text-center text-xs text-muted pb-2">
+      <section className="text-center text-xs text-muted pb-2 leading-relaxed">
         엔터테인먼트·셀프 리플렉션 목적 · 실제 점술·의료·법률 조언을 대체하지
         않습니다
+        <br />
+        MVP 만세력은 참고용이며 전문 명리가 아닙니다
       </section>
     </div>
   );

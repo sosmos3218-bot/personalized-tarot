@@ -1,6 +1,6 @@
-# 별빛 타로 — 개인화 타로 MVP
+# 별빛 타로 — 타로+사주 퓨전 MVP
 
-회원가입·온보딩 후, 메이저 아르카나로 **개인화된 타로 리딩**을 받는 한국어 웹 앱입니다.
+회원가입 후 **사주(만세력) 프로필**과 온보딩을 거쳐, 메이저 아르카나로 **타로+사주 퓨전 리딩**을 받는 한국어 웹 앱입니다.
 Clerk 인증과 Vercel AI Gateway 기반 해석(실패 시 템플릿 폴백)을 지원합니다.
 
 ## 환경 변수
@@ -13,11 +13,11 @@ Clerk 인증과 Vercel AI Gateway 기반 해석(실패 시 템플릿 폴백)을 
 | `CLERK_SECRET_KEY` | Clerk secret key (`sk_test_…` / `sk_live_…`) |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` |
-| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | `/onboarding` |
-| `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | `/onboarding` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | `/saju` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | `/saju` |
 | `AI_GATEWAY_API_KEY` | (선택) Vercel AI Gateway — 없으면 템플릿 해석 |
 
-**빌드:** `next build`는 Clerk 키가 필요합니다. CI/로컬에서는 Clerk 대시보드의 **테스트 키**를 `.env.local`에 넣거나, 형식만 맞는 placeholder(`pk_test_…` / `sk_test_…`)로 타입체크·빌드를 통과시킬 수 있습니다. Placeholder로는 실제 로그인이 되지 않습니다. `.env.local`은 gitignore 대상입니다.
+**빌드:** `next build`는 Clerk 키가 필요합니다. `.env.local`은 gitignore 대상입니다. 시크릿을 커밋하지 마세요.
 
 ## 실행 방법
 
@@ -37,12 +37,13 @@ npm start
 
 ## 기능
 
-1. **랜딩** — 서비스 소개 (한국어)
-2. **회원가입 / 로그인** — Clerk (`/sign-up`, `/sign-in`, 한국어 localization)
-3. **온보딩 3문항** — 고민 분야 / 기분 / 리딩 목표 (localStorage, Clerk user id 키)
-4. **뽑기** — 섞기 → 1장 또는 3장 스프레드 → 카드 공개
-5. **AI 해석** — `POST /api/interpret` (인증 필요). 모델: `openai/gpt-5-mini` via AI Gateway. 키 없거나 실패 시 템플릿
-6. **결과 · 기록** — AI/템플릿 해석 표시, 로컬 히스토리
+1. **랜딩** — 타로+사주 퓨전 소개 (한국어)
+2. **회원가입 / 로그인** — Clerk (`/sign-up`, `/sign-in`)
+3. **사주 프로필** — 생년월일(필수), 출생 시각(선택/모름), 성별(선택), 양력/음력
+4. **온보딩 3문항** — 고민 분야 / 기분 / 리딩 목표
+5. **뽑기** — 1장 또는 3장 스프레드
+6. **AI 퓨전 해석** — `POST /api/interpret` — 섹션: 사주 기운 / 타로 / 퓨전 메시지
+7. **결과 · 기록** — 사주 요약 · 타로 카드 · 퓨전 해석 블록, 로컬 히스토리
 
 ### 라우트
 
@@ -51,29 +52,35 @@ npm start
 | `/` | 랜딩 |
 | `/sign-up` | Clerk 회원가입 |
 | `/sign-in` | Clerk 로그인 |
-| `/auth` | 레거시 → `/sign-up` 리다이렉트 |
-| `/onboarding` | 온보딩 (보호) |
+| `/saju` | 사주 프로필 (보호) |
+| `/onboarding` | 온보딩 (보호, 사주 필요) |
 | `/draw` | 카드 뽑기 (보호) |
-| `/result` | 리딩 결과 (보호, AI 해석 호출) |
+| `/result` | 리딩 결과 (보호) |
 | `/history` | 로컬 리딩 기록 (보호) |
-| `/api/interpret` | AI/템플릿 해석 API (보호) |
+| `/api/interpret` | AI/템플릿 퓨전 해석 API (보호) |
 
-### 인증 + AI 흐름
+### 사주 계산 (MVP · 참고용)
 
-1. 랜딩 CTA → `/sign-up` (미로그인) 또는 `/draw` (로그인)
-2. Clerk 가입/로그인 후 `/onboarding`
-3. 온보딩 답변은 `localStorage`에 `tarot_onboarding:<userId>`로 저장
-4. `/draw`에서 카드 뽑기 → 템플릿 해석으로 임시 저장 → `/result`
-5. 결과 페이지가 `/api/interpret` 호출 → AI 텍스트 표시 (실패 시 템플릿 + 안내)
+로컬 TypeScript (`src/lib/saju/`) — 유료 API 없음.
+
+- **일간(日干)** · 음양 · 오행: 양력 일주(JDN 기반 간지)
+- **년·월·일주**: 입춘(근사 2/4)·절기 근사 경계 + 오호둔
+- **시주**: 출생 시각이 있을 때만 (2시간 지지, 오서둔)
+- **음력**: 1900–2100 비트테이블 변환 (윤달 UI 미선택)
+
+**한계:** 절기 ±1일, 진태양시·야자시 미반영, 대운/신살/십신 없음.  
+**고지:** MVP 만세력은 참고용이며 전문 명리가 아닙니다.
+
+사주·온보딩은 `localStorage`에 Clerk user id 키로 저장됩니다 (`tarot_saju:<userId>`, `tarot_onboarding:<userId>`).
 
 ### 기술 스택
 
 - Next.js App Router + TypeScript + Tailwind CSS
 - Clerk (`@clerk/nextjs`) + `@clerk/localizations` (ko-KR)
 - Vercel AI SDK (`ai`) + AI Gateway (`openai/gpt-5-mini`)
-- 상태: localStorage (온보딩·히스토리)
+- 상태: localStorage (사주·온보딩·히스토리)
 
 ## 참고
 
 - 엔터테인먼트·셀프 리플렉션 목적입니다.
-- 실제 점술·의료·법률 조언을 대체하지 않습니다.
+- 실제 점술·의료·법률·전문 명리 상담을 대체하지 않습니다.
