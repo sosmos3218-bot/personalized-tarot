@@ -34,6 +34,12 @@ export default function Header() {
               뽑기
             </Link>
             <Link
+              href="/saju"
+              className="hover:text-[var(--accent-gold)] transition-colors px-1"
+            >
+              사주
+            </Link>
+            <Link
               href="/history"
               className="hover:text-[var(--accent-gold)] transition-colors px-1"
             >
@@ -43,7 +49,7 @@ export default function Header() {
           </SignedIn>
 
           <SignedOut>
-            <SignInButton mode="redirect" forceRedirectUrl="/onboarding">
+            <SignInButton mode="redirect" forceRedirectUrl="/saju">
               <button
                 type="button"
                 className="rounded-full px-3 py-1.5 text-xs font-medium text-white transition-colors"

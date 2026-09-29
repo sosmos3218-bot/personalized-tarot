@@ -54,6 +54,8 @@ export interface ReadingResult {
   interpretation: string;
   /** How the interpretation was produced */
   interpretationSource?: "ai" | "template";
+  /** Optional saju summary snapshot at draw time */
+  sajuSummary?: string;
 }
 
 export const CONCERN_LABELS: Record<ConcernCategory, string> = {
@@ -86,3 +88,6 @@ export const SPREAD_LABELS: Record<SpreadType, string> = {
 };
 
 export const THREE_CARD_POSITIONS = ["과거", "현재", "미래"] as const;
+
+/** Re-export saju types for convenience */
+export type { SajuProfile, SajuInput, SajuChart, CalendarType, Gender } from "./saju/types";
