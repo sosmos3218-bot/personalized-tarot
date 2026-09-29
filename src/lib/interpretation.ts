@@ -7,6 +7,8 @@ import type {
   SpreadType,
 } from "./types";
 import { CONCERN_LABELS, GOAL_LABELS, MOOD_LABELS } from "./types";
+import type { SajuProfile } from "./saju/types";
+import { SAJU_DISCLAIMER } from "./saju/types";
 
 const CONCERN_OPENERS: Record<ConcernCategory, string> = {
   love: "연애와 사랑의 길을 묻는 당신에게",
@@ -50,13 +52,36 @@ const GOAL_SUMMARIES: Record<ReadingGoal, string> = {
   comfort: "따뜻한 위로를 받아들일 준비를 하고 있습니다.",
 };
 
+function sajuBlock(saju?: SajuProfile | null): string {
+  if (!saju?.chart) {
+    return [
+      "## 사주 기운",
+      "사주 프로필이 없어 일반 타로 중심으로 안내합니다.",
+      "",
+    ].join("\n");
+  }
+  const dm = saju.chart.dayMaster;
+  return [
+    "## 사주 기운",
+    `일간 ${dm.stemHan}(${dm.stemKo}) — ${dm.yinYangLabel} · ${dm.elementLabel}`,
+    `${dm.elementTrait}의 기운이 바탕에 있습니다.`,
+    `기둥: ${saju.summaryText}`,
+    `※ ${SAJU_DISCLAIMER}`,
+    "",
+  ].join("\n");
+}
+
 function buildOneCardInterpretation(
   cards: DrawnCard[],
-  answers: OnboardingAnswers
+  answers: OnboardingAnswers,
+  saju?: SajuProfile | null
 ): string {
   const drawn = cards[0];
   const card = drawn.card;
   const lines = [
+    sajuBlock(saju).trimEnd(),
+    "",
+    "## 타로",
     `${CONCERN_OPENERS[answers.concern]},`,
     `「${card.nameKo}」(${card.nameEn}) 카드가 뽑혔습니다.`,
     "",
@@ -67,6 +92,10 @@ function buildOneCardInterpretation(
     "",
     `✦ 조언: ${card.uprightAdvice}`,
     "",
+    "## 퓨전 메시지",
+    saju?.chart
+      ? `사주의 ${saju.chart.dayMaster.elementLabel} 기운과 「${card.nameKo}」의 상징이 만나는 지점에서, ${CONCERN_LABELS[answers.concern]}에 대한 오늘의 힌트를 찾아보세요.`
+      : `「${card.nameKo}」의 메시지가 오늘의 방향을 비춥니다.`,
     GOAL_CLOSERS[answers.goal](card.nameKo),
     "",
     `오늘의 초점 — ${CONCERN_LABELS[answers.concern]} / ${MOOD_LABELS[answers.mood]} / ${GOAL_LABELS[answers.goal].split(" — ")[0]}`,
@@ -76,10 +105,14 @@ function buildOneCardInterpretation(
 
 function buildThreeCardInterpretation(
   cards: DrawnCard[],
-  answers: OnboardingAnswers
+  answers: OnboardingAnswers,
+  saju?: SajuProfile | null
 ): string {
   const [past, present, future] = cards;
   const lines = [
+    sajuBlock(saju).trimEnd(),
+    "",
+    "## 타로",
     `${CONCERN_OPENERS[answers.concern]},`,
     "과거 · 현재 · 미래의 흐름이 펼쳐졌습니다.",
     "",
@@ -98,6 +131,11 @@ function buildThreeCardInterpretation(
     future.card.uprightMeaning,
     "",
     `✦ 종합 조언: ${present.card.uprightAdvice}`,
+    "",
+    "## 퓨전 메시지",
+    saju?.chart
+      ? `일간 ${saju.chart.dayMaster.stemHan}(${saju.chart.dayMaster.stemKo})의 ${saju.chart.dayMaster.elementLabel} 성향과 세 장의 흐름이 어우러집니다.`
+      : "세 장의 카드가 시간의 이야기를 이어 줍니다.",
     GOAL_CLOSERS[answers.goal](present.card.nameKo),
     "",
     `과거(${past.card.nameKo})에서 현재(${present.card.nameKo})로, 그리고 미래(${future.card.nameKo})로 이어지는 이야기입니다. ${CONCERN_LABELS[answers.concern]}에 대한 당신의 ${MOOD_DESCRIPTORS[answers.mood]} 마음은 ${GOAL_SUMMARIES[answers.goal]}`,
@@ -108,12 +146,13 @@ function buildThreeCardInterpretation(
 export function buildInterpretation(
   cards: DrawnCard[],
   answers: OnboardingAnswers,
-  spread: SpreadType
+  spread: SpreadType,
+  saju?: SajuProfile | null
 ): string {
   if (spread === "one") {
-    return buildOneCardInterpretation(cards, answers);
+    return buildOneCardInterpretation(cards, answers, saju);
   }
-  return buildThreeCardInterpretation(cards, answers);
+  return buildThreeCardInterpretation(cards, answers, saju);
 }
 
 export function createReadingId(): string {
