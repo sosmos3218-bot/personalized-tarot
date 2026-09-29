@@ -28,6 +28,12 @@ export default function Header() {
         <nav className="flex items-center gap-2 sm:gap-3 text-sm text-body">
           <SignedIn>
             <Link
+              href="/today"
+              className="hover:text-[var(--accent-gold)] transition-colors px-1"
+            >
+              오늘의 운세
+            </Link>
+            <Link
               href="/draw"
               className="hover:text-[var(--accent-gold)] transition-colors px-1"
             >
