@@ -34,12 +34,30 @@ export interface SajuInput {
   calendarType: CalendarType;
 }
 
+export interface PillarTenGods {
+  /** 천간 십신 */
+  stemKo: string;
+  stemHan: string;
+  /** 지지 정기(本氣) 십신 */
+  branchKo: string;
+  branchHan: string;
+}
+
+export interface TenGodSet {
+  year: PillarTenGods;
+  month: PillarTenGods;
+  day: PillarTenGods;
+  hour: PillarTenGods | null;
+}
+
 export interface SajuChart {
   year: Pillar;
   month: Pillar;
   day: Pillar;
   hour: Pillar | null;
   dayMaster: DayMaster;
+  /** 일간 기준 십신. 구 저장본에는 없을 수 있음 */
+  tenGods?: TenGodSet;
   /** 계산에 사용한 양력 날짜 YYYY-MM-DD */
   solarDate: string;
   /** 입력 음력 날짜 (해당 시) */
@@ -62,4 +80,4 @@ export interface SajuProfile {
 }
 
 export const SAJU_DISCLAIMER =
-  "MVP 만세력은 참고용입니다. 절기·시차·윤달·야자시 등을 단순화했으며, 전문 명리·상담을 대체하지 않습니다.";
+  "MVP 만세력은 참고용입니다. 절기는 태양 황경 근사(수 시간 오차 가능)이고, 시각을 모르면 정오로 경계를 보며, 십신은 천간·지지 정기만 계산합니다. 진태양시·야자시·대운·신살은 반영하지 않으며 전문 명리·상담을 대체하지 않습니다.";

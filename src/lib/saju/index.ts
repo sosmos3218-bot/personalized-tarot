@@ -14,3 +14,5 @@ export {
   parseYmd,
   isLunarYearSupported,
 } from "./lunar";
+export { jieTermsForYear, lichunOfYear, monthBranchAtKst, sajuYearAtKst } from "./solarTerms";
+export { pillarTenGods } from "./tenGods";
