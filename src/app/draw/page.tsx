@@ -84,7 +84,7 @@ function DrawFlow() {
           interpretationSource: "template" as const,
           sajuSummary: saju.summaryText,
         };
-        saveReading(reading);
+        saveReading(reading, userId);
         setTimeout(() => {
           router.push(`/result?id=${reading.id}`);
         }, 700);
