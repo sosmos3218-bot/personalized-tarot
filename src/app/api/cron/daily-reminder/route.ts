@@ -93,7 +93,10 @@ export async function GET(req: Request) {
         results.push({ userId, status: "skip_disabled" });
         continue;
       }
-      if (prefs.hourKst !== hour) {
+      // Hobby cron runs once daily (~08:00 KST). Default: send all opted-in
+      // users on that run. Set CRON_RESPECT_HOUR=1 to filter by hourKst.
+      const respectHour = process.env.CRON_RESPECT_HOUR === "1";
+      if (respectHour && prefs.hourKst !== hour) {
         results.push({ userId, status: "skip_hour" });
         continue;
       }
