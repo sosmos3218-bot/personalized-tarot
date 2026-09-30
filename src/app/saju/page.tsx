@@ -400,6 +400,63 @@ function SajuForm() {
                 </dd>
               </div>
             )}
+            {preview.chart.jijanggan && (
+              <div className="col-span-2 border-t border-[var(--card-border)] pt-2 mt-1">
+                <dt className="text-xs text-muted">지장간 · 여기 / 중기 / 본기</dt>
+                <dd className="mt-1 space-y-0.5 text-xs sm:text-sm">
+                  <p>
+                    <span className="text-muted">년</span>{" "}
+                    {preview.chart.jijanggan.year.compact}
+                  </p>
+                  <p>
+                    <span className="text-muted">월</span>{" "}
+                    {preview.chart.jijanggan.month.compact}
+                  </p>
+                  <p>
+                    <span className="text-muted">일</span>{" "}
+                    {preview.chart.jijanggan.day.compact}
+                  </p>
+                  <p>
+                    <span className="text-muted">시</span>{" "}
+                    {preview.chart.jijanggan.hour
+                      ? preview.chart.jijanggan.hour.compact
+                      : "미상"}
+                  </p>
+                </dd>
+              </div>
+            )}
+            {preview.chart.daeun ? (
+              <div className="col-span-2 border-t border-[var(--card-border)] pt-2 mt-1">
+                <dt className="text-xs text-muted">
+                  대운 · {preview.chart.daeun.directionLabel} · 시작 만
+                  {preview.chart.daeun.startAge}세 (
+                  {preview.chart.daeun.boundaryTermName} 기준)
+                </dt>
+                <dd className="mt-1.5">
+                  <ul className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs sm:text-sm">
+                    {preview.chart.daeun.pillars.map((p) => (
+                      <li key={p.index} className="flex justify-between gap-1">
+                        <span className="font-medium text-heading">
+                          {p.stemHan}
+                          {p.branchHan}
+                        </span>
+                        <span className="text-muted tabular-nums">
+                          {p.ageFrom}–{p.ageTo}세
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ) : (
+              preview.chart.gender === "unspecified" && (
+                <div className="col-span-2 border-t border-[var(--card-border)] pt-2 mt-1">
+                  <p className="text-xs text-muted">
+                    대운은 성별을 선택하면 양남음녀·음남양녀 규칙으로 표시됩니다.
+                  </p>
+                </div>
+              )
+            )}
           </dl>
         </div>
       )}
