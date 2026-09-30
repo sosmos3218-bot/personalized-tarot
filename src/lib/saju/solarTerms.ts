@@ -201,3 +201,35 @@ export function sajuYearAtKst(
   const lichun = lichunOfYear(y);
   return jd < lichun.jd ? y - 1 : y;
 }
+
+/**
+ * 출생 시각 기준 직전·직후 절(節).
+ * 대운 시작 나이(절입까지 일수÷3) 계산용.
+ */
+export function jieNeighborsAtKst(
+  y: number,
+  m: number,
+  d: number,
+  hour: number,
+  minute: number
+): { prev: JieTerm; next: JieTerm; birthJd: number } {
+  const birthJd = kstToJd(y, m, d, hour, minute);
+  const pool = [
+    ...jieTermsForYear(y - 1),
+    ...jieTermsForYear(y),
+    ...jieTermsForYear(y + 1),
+  ].sort((a, b) => a.jd - b.jd);
+
+  let prev: JieTerm | null = null;
+  let next: JieTerm | null = null;
+  for (const t of pool) {
+    if (t.jd <= birthJd) prev = t;
+    else if (!next) {
+      next = t;
+      break;
+    }
+  }
+  if (!prev) prev = pool[0]!;
+  if (!next) next = pool[pool.length - 1]!;
+  return { prev, next, birthJd };
+}
