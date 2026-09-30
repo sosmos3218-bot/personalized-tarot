@@ -49,10 +49,10 @@ function ResultContent() {
   useEffect(() => {
     const id = searchParams.get("id");
     if (id) {
-      const found = getHistory().find((r) => r.id === id);
-      setReading(found ?? getLastReading());
+      const found = getHistory(userId).find((r) => r.id === id);
+      setReading(found ?? getLastReading(userId));
     } else {
-      setReading(getLastReading());
+      setReading(getLastReading(userId));
     }
     setSaju(getSajuProfile(userId));
   }, [searchParams, userId]);
@@ -109,7 +109,7 @@ function ResultContent() {
               }
             : prev
         );
-        updateReadingInterpretation(reading!.id, data.text, data.source);
+        updateReadingInterpretation(reading!.id, data.text, data.source, userId);
 
         if (data.source === "template" && data.message) {
           setAiError(data.message);
@@ -183,7 +183,6 @@ function ResultContent() {
         </p>
       </div>
 
-      {/* 1. 사주 요약 */}
       <section className="card-panel !p-5 sm:!p-6">
         <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-heading">
           <span aria-hidden className="text-accent">
@@ -221,7 +220,6 @@ function ResultContent() {
         )}
       </section>
 
-      {/* 2. 타로 카드 */}
       <section className="space-y-4">
         <h2 className="text-center text-lg font-semibold text-heading flex items-center justify-center gap-2">
           <span aria-hidden className="text-accent">
@@ -242,7 +240,6 @@ function ResultContent() {
         </div>
       </section>
 
-      {/* 3. 퓨전 해석 */}
       <section className="card-panel !p-5 sm:!p-7">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-heading">
