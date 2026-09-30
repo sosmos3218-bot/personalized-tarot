@@ -1,11 +1,48 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import {
+  getDailyTarotLock,
+  getSeoulTodayYmd,
+  hasDailyFortuneViewed,
+} from "@/lib/daily";
+import { getSajuProfile, hasDailyHistoryForDate } from "@/lib/storage";
 
 export default function LandingPage() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const loggedIn = isLoaded && isSignedIn;
+  const [hasSaju, setHasSaju] = useState(false);
+  const [seenToday, setSeenToday] = useState(false);
+
+  useEffect(() => {
+    if (!loggedIn || !userId) {
+      setHasSaju(false);
+      setSeenToday(false);
+      return;
+    }
+    setHasSaju(Boolean(getSajuProfile(userId)));
+    const ymd = getSeoulTodayYmd();
+    setSeenToday(
+      hasDailyFortuneViewed(userId, ymd) ||
+        Boolean(getDailyTarotLock(userId, ymd)) ||
+        hasDailyHistoryForDate(ymd, userId)
+    );
+  }, [loggedIn, userId]);
+
+  const primaryHref = !loggedIn
+    ? "/sign-up"
+    : hasSaju
+      ? "/today"
+      : "/saju";
+  const primaryLabel = !loggedIn
+    ? "무료로 시작하기"
+    : hasSaju
+      ? seenToday
+        ? "오늘의 운세 다시 보기"
+        : "오늘의 운세 보기"
+      : "사주 등록하고 시작";
 
   return (
     <div className="space-y-10 sm:space-y-14">
@@ -31,10 +68,10 @@ export default function LandingPage() {
         </p>
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
           <Link
-            href={loggedIn ? "/today" : "/sign-up"}
+            href={primaryHref}
             className="btn-primary w-full sm:w-auto animate-glow"
           >
-            {loggedIn ? "오늘의 운세 보기" : "무료로 시작하기"}
+            {primaryLabel}
           </Link>
           <Link
             href={loggedIn ? "/draw" : "#how"}
@@ -43,6 +80,19 @@ export default function LandingPage() {
             {loggedIn ? "카드 뽑기" : "이용 방법 보기"}
           </Link>
         </div>
+
+        {loggedIn && hasSaju && seenToday && (
+          <p className="mt-3 text-xs text-muted">
+            <Link
+              href="/today"
+              className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors hover:border-[var(--accent-gold-bright)]"
+              style={{ borderColor: "var(--border)", background: "var(--chip-bg)" }}
+            >
+              <span className="text-accent font-medium">오늘 이미 봄</span>
+              <span>· 운세 다시 열기</span>
+            </Link>
+          </p>
+        )}
 
         <div
           className="mt-10 flex justify-center gap-3 opacity-80 animate-soft-float"
