@@ -73,6 +73,12 @@ function SignedInNav() {
       >
         기록
       </Link>
+      <Link
+        href="/settings"
+        className="hover:text-[var(--accent-gold)] transition-colors px-1 hidden sm:inline"
+      >
+        알림
+      </Link>
       <UserButton afterSignOutUrl="/" />
     </>
   );
