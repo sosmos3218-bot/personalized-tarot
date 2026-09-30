@@ -1,7 +1,9 @@
 /**
- * 십신 — 일간 대비 천간 / 지지 정기(本氣)만. 여기·중기·지장간 전체는 아님.
+ * 십신 — 일간 대비 천간 / 지지 정기(本氣).
+ * 지지 정기는 지장간 본기와 동일.
  */
 import { STEMS, type Element } from "./constants";
+import { mainStemIndex } from "./jijanggan";
 
 export interface TenGodName {
   ko: string;
@@ -33,9 +35,6 @@ const CONTROLS: Record<Element, Element> = {
   metal: "wood",
 };
 
-/** 지지 정기(本氣) 천간 index */
-const BRANCH_MAIN_STEM = [9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8];
-
 function tenGod(dayStem: number, otherStem: number): TenGodName {
   const a = STEMS[dayStem];
   const b = STEMS[otherStem];
@@ -64,7 +63,7 @@ export function pillarTenGods(
   branchIndex: number
 ): PillarTenGods {
   const stem = tenGod(dayStemIndex, stemIndex);
-  const main = BRANCH_MAIN_STEM[((branchIndex % 12) + 12) % 12];
+  const main = mainStemIndex(branchIndex);
   const branch = tenGod(dayStemIndex, main);
   return {
     stemKo: stem.ko,
@@ -75,6 +74,5 @@ export function pillarTenGods(
 }
 
 export function branchMainStemIndex(branchIndex: number): number {
-  return BRANCH_MAIN_STEM[((branchIndex % 12) + 12) % 12];
+  return mainStemIndex(branchIndex);
 }
-
