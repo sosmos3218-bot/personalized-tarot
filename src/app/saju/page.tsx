@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import AuthGate from "@/components/AuthGate";
+import ProgressSteps from "@/components/ProgressSteps";
 import { buildSajuProfile } from "@/lib/saju";
 import type { CalendarType, Gender, SajuProfile } from "@/lib/saju";
 import { SAJU_DISCLAIMER } from "@/lib/saju";
@@ -60,14 +62,33 @@ const YEAR_OPTIONS = Array.from(
 export default function SajuPage() {
   return (
     <AuthGate>
-      <SajuForm />
+      <Suspense
+        fallback={
+          <p className="text-center text-body animate-pulse">불러오는 중…</p>
+        }
+      >
+        <SajuForm />
+      </Suspense>
     </AuthGate>
   );
 }
 
 function SajuForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { userId } = useAuth();
+  const needSaju = searchParams.get("need") === "saju";
+  const fromPath = searchParams.get("from");
+  const fromLabel =
+    fromPath === "/today"
+      ? "오늘의 운세"
+      : fromPath === "/draw"
+        ? "카드 뽑기"
+        : fromPath === "/onboarding"
+          ? "맞춤 리딩"
+          : fromPath === "/result"
+            ? "리딩 결과"
+            : null;
   const [year, setYear] = useState(DEFAULT_YEAR);
   const [month, setMonth] = useState(DEFAULT_MONTH);
   const [day, setDay] = useState(DEFAULT_DAY);
@@ -78,6 +99,7 @@ function SajuForm() {
   const [error, setError] = useState<string | null>(null);
   const [existing, setExisting] = useState<SajuProfile | null>(null);
   const [preview, setPreview] = useState<SajuProfile | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
 
   const maxDay = daysInMonth(year, month);
   const birthDate = toYmd(year, month, Math.min(day, maxDay));
@@ -144,24 +166,97 @@ function SajuForm() {
       saveSajuProfile(profile, userId);
       setExisting(profile);
       setPreview(profile);
-      // Prefer today's fortune first; classic draw remains available from /today
-      router.push("/today?welcome=1");
+      setJustSaved(true);
+      // Prefer returning to the page that sent us here (e.g. /today)
+      if (
+        fromPath &&
+        fromPath.startsWith("/") &&
+        !fromPath.startsWith("//") &&
+        fromPath !== "/saju"
+      ) {
+        const dest =
+          fromPath === "/today" ? "/today?welcome=1" : fromPath;
+        router.push(dest);
+        return;
+      }
+      // Otherwise stay and show next-step recommendation (오늘의 운세 first)
     } catch (e) {
       setError(e instanceof Error ? e.message : "사주 저장에 실패했습니다.");
     }
   }
 
+  if (justSaved) {
+    return (
+      <div className="mx-auto max-w-lg space-y-6 animate-fade-up">
+        <ProgressSteps current="today" done={["saju"]} />
+        <div className="text-center">
+          <p className="text-[11px] tracking-[0.22em] text-accent font-medium">
+            저장 완료
+          </p>
+          <h1 className="mt-2 text-xl font-bold text-heading sm:text-2xl leading-snug px-1">
+            사주가 준비됐어요
+          </h1>
+          <p className="mt-2 text-sm text-body px-2 leading-relaxed">
+            먼저 <strong className="text-heading font-semibold">오늘의 운세</strong>로
+            하루 기운을 확인해 보세요. 깊이 있는 맞춤 리딩은 언제든 이어갈 수 있어요.
+          </p>
+        </div>
+        <div className="card-panel space-y-3 !p-5">
+          <Link href="/today?welcome=1" className="btn-primary w-full animate-glow block text-center">
+            오늘의 운세 보기
+          </Link>
+          <Link href="/onboarding" className="btn-secondary w-full block text-center">
+            맞춤 리딩 준비하기
+          </Link>
+          <Link
+            href="/draw"
+            className="block text-center text-sm text-muted hover:text-heading transition-colors pt-1"
+          >
+            바로 카드 뽑기
+          </Link>
+        </div>
+        {preview && (
+          <p className="text-center text-xs text-body px-2">{preview.summaryText}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-lg space-y-6 animate-fade-up">
+      <ProgressSteps current="saju" />
+
+      {needSaju && (
+        <div
+          className="rounded-2xl border px-4 py-3 text-sm leading-relaxed"
+          style={{
+            borderColor: "var(--choice-selected-border)",
+            background: "var(--choice-selected-bg)",
+          }}
+          role="status"
+        >
+          <p className="font-medium text-heading">
+            {fromLabel
+              ? `${fromLabel}을(를) 보려면 사주가 필요해요`
+              : "사주를 먼저 등록해 주세요"}
+          </p>
+          <p className="mt-1 text-body text-[13px]">
+            생년월일만 있으면 일간·오행을 계산해 타로+사주 퓨전 해석에 씁니다.
+            저장 후 오늘의 운세부터 추천드려요.
+          </p>
+        </div>
+      )}
+
       <div className="text-center">
         <p className="text-[11px] tracking-[0.22em] text-accent font-medium">
-          SAJU · 만세력
+          1단계 · 사주
         </p>
         <h1 className="mt-2 text-xl font-bold text-heading sm:text-2xl leading-snug px-1">
           사주 프로필
         </h1>
         <p className="mt-2 text-sm text-body px-2 leading-relaxed">
-          출생 정보를 입력하면 일간·간지를 계산해 타로 해석에 함께 씁니다.
+          출생 정보를 입력하면 일간·간지를 계산해 오늘의 운세와 타로 해석에 함께
+          씁니다.
         </p>
       </div>
 
@@ -331,7 +426,7 @@ function SajuForm() {
             onClick={saveAndContinue}
             disabled={!canSubmit}
           >
-            {existing ? "저장 후 계속" : "저장하고 계속"}
+            {existing ? "저장하고 다음으로" : "저장하고 다음으로"}
           </button>
         </div>
       </div>
