@@ -17,6 +17,11 @@ Clerk 인증과 Vercel AI Gateway 기반 해석(실패 시 템플릿 폴백)을 
 | `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | `/saju` |
 | `AI_GATEWAY_API_KEY` | (선택) Vercel AI Gateway API 키 — 있으면 우선 사용. 없으면 템플릿 해석 |
 | `TAROT_AI_MODEL` | (선택) Gateway 모델 id. 기본값 `inclusionai/ling-3.1-flash-free` (무료) |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob RW 토큰 (스토어 연결 시 자동) |
+| `BLOB_STORE_ID` | Blob 스토어 id |
+| `RESEND_API_KEY` | (선택) 일일 운세 메일 — [Resend](https://resend.com) |
+| `RESEND_FROM_EMAIL` | (선택) 발신 주소. 기본 `별빛 타로 <onboarding@resend.dev>` |
+| `CRON_SECRET` | (선택) `/api/cron/daily-reminder` Bearer 보호 |
 
 **빌드:** `next build`는 Clerk 키가 필요합니다. `.env.local`은 gitignore 대상입니다. 시크릿을 커밋하지 마세요.
 
@@ -47,7 +52,9 @@ npm start
 5. **온보딩 3문항 (선택)** — 고민 분야 / 기분 / 리딩 목표. 건너뛰고 운세만 볼 수 있음
 6. **뽑기** — 1장 또는 3장 스프레드 (온보딩 없으면 기본값)
 7. **AI 퓨전 해석** — `POST /api/interpret` — 섹션: 사주 기운 / 타로 / 퓨전 메시지
-8. **결과 · 기록** — 사주 요약 · 타로 카드 · 퓨전 해석 블록, 로컬 히스토리
+8. **결과 · 기록** — 사주 요약 · 타로 카드 · 퓨전 해석 블록, **서버 히스토리**(Vercel Blob) + 로컬 캐시
+9. **사주 심화** — 진태양시 · 야자시 · 신살(도화·화개·역마·공망·천을귀인)
+10. **일일 메일 알림** — `/settings` 옵트인 + Vercel Cron (`vercel.json`)
 
 ### 라우트
 
@@ -61,7 +68,13 @@ npm start
 | `/onboarding` | 맞춤 리딩 온보딩 (보호, 사주 필요 · 스킵 가능) |
 | `/draw` | 카드 뽑기 (보호, 사주 필요) |
 | `/result` | 리딩 결과 (보호) |
-| `/history` | 로컬 리딩 기록 (보호) |
+| `/history` | 서버 동기화 리딩 기록 (보호) |
+| `/settings` | 일일 운세 메일 알림 (보호) |
+| `/api/history` | 리딩 저장·목록·마이그레이션 (보호) |
+| `/api/saju-profile` | 사주 프로필 서버 저장 (보호) |
+| `/api/daily-lock` | 오늘의 타로 락 (보호) |
+| `/api/prefs` | 알림 설정 (보호) |
+| `/api/cron/daily-reminder` | 매시 정각 메일 크론 |
 | `/api/interpret` | AI/템플릿 퓨전 해석 API (보호) |
 
 ### 사주 계산 (MVP · 참고용)
@@ -73,17 +86,17 @@ npm start
 - **시주**: 출생 시각이 있을 때만 (2시간 지지, 오서둔)
 - **음력**: 1900–2100 비트테이블 변환 (윤달 UI 미선택)
 
-**한계:** 절기 시각은 황경 근사라 공식 절입시각과 수 시간 차이 날 수 있음. 진태양시·야자시 미반영. 십신(정기)·지장간(여기·중기·본기)·대운(순·역행, 절입÷3 시작 나이 근사)은 간이 규칙. 신살 없음.  
-**고지:** MVP 만세력은 참고용이며 전문 명리가 아닙니다.
+**한계:** 절기 시각은 황경 근사라 공식 절입시각과 수 시간 차이 날 수 있음. 진태양시는 경도(기본 서울)+균시차 Spencer 근사, 야자시(23시→다음날 일주)와 신살(도화·화개·역마·공망·천을귀인)은 간이 규칙. 십신(정기)·지장간·대운도 간이입니다.  
+**고지:** MVP 만세력은 참고용이며 전문 명리가 아닙니다. 상세는 `src/lib/saju/LIMITS.md`.
 
-사주·온보딩은 `localStorage`에 Clerk user id 키로 저장됩니다 (`tarot_saju:<userId>`, `tarot_onboarding:<userId>`).
+사주·히스토리·데일리 락은 로그인 시 **Vercel Blob**에 서버 저장되고, `localStorage`는 캐시·오프라인 폴백입니다. 온보딩은 계속 로컬(`tarot_onboarding:<userId>`).
 
 ### 기술 스택
 
 - Next.js App Router + TypeScript + Tailwind CSS
 - Clerk (`@clerk/nextjs`) + `@clerk/localizations` (ko-KR)
 - Vercel AI SDK (`ai`) + AI Gateway (기본 `inclusionai/ling-3.1-flash-free`, `TAROT_AI_MODEL`로 변경 가능)
-- 상태: localStorage (사주·온보딩·히스토리)
+- 상태: Vercel Blob (사주·히스토리·데일리·알림설정) + localStorage 캐시
 
 ## 참고
 
