@@ -21,6 +21,14 @@ function sajuKey(userId?: string | null): string {
   return userId ? `${KEYS.saju}:${userId}` : KEYS.saju;
 }
 
+function historyKey(userId?: string | null): string {
+  return userId ? `${KEYS.history}:${userId}` : KEYS.history;
+}
+
+function lastReadingKey(userId?: string | null): string {
+  return userId ? `${KEYS.lastReading}:${userId}` : KEYS.lastReading;
+}
+
 /** @deprecated Demo localStorage user — Clerk is the source of truth */
 export function getUser(): User | null {
   if (!isBrowser()) return null;
@@ -104,34 +112,47 @@ export function clearSajuProfile(userId?: string | null): void {
   if (userId) localStorage.removeItem(KEYS.saju);
 }
 
-export function getHistory(): ReadingResult[] {
+export function getHistory(userId?: string | null): ReadingResult[] {
   if (!isBrowser()) return [];
   try {
-    const raw = localStorage.getItem(KEYS.history);
-    return raw ? (JSON.parse(raw) as ReadingResult[]) : [];
+    const keyed = localStorage.getItem(historyKey(userId));
+    if (keyed) return JSON.parse(keyed) as ReadingResult[];
+    // Migrate legacy unscoped history into the user bucket once
+    if (userId) {
+      const legacy = localStorage.getItem(KEYS.history);
+      if (legacy) {
+        localStorage.setItem(historyKey(userId), legacy);
+        return JSON.parse(legacy) as ReadingResult[];
+      }
+    }
+    return [];
   } catch {
     return [];
   }
 }
 
-export function saveReading(reading: ReadingResult): void {
+export function saveReading(
+  reading: ReadingResult,
+  userId?: string | null
+): void {
   if (!isBrowser()) return;
-  const history = getHistory();
+  const history = getHistory(userId);
   const next = [reading, ...history.filter((r) => r.id !== reading.id)].slice(
     0,
     50
   );
-  localStorage.setItem(KEYS.history, JSON.stringify(next));
-  localStorage.setItem(KEYS.lastReading, JSON.stringify(reading));
+  localStorage.setItem(historyKey(userId), JSON.stringify(next));
+  localStorage.setItem(lastReadingKey(userId), JSON.stringify(reading));
 }
 
 export function updateReadingInterpretation(
   id: string,
   interpretation: string,
-  source?: "ai" | "template"
+  source?: "ai" | "template",
+  userId?: string | null
 ): void {
   if (!isBrowser()) return;
-  const history = getHistory();
+  const history = getHistory(userId);
   const next = history.map((r) =>
     r.id === id
       ? {
@@ -141,11 +162,11 @@ export function updateReadingInterpretation(
         }
       : r
   );
-  localStorage.setItem(KEYS.history, JSON.stringify(next));
-  const last = getLastReading();
+  localStorage.setItem(historyKey(userId), JSON.stringify(next));
+  const last = getLastReading(userId);
   if (last?.id === id) {
     localStorage.setItem(
-      KEYS.lastReading,
+      lastReadingKey(userId),
       JSON.stringify({
         ...last,
         interpretation,
@@ -155,18 +176,51 @@ export function updateReadingInterpretation(
   }
 }
 
-export function getLastReading(): ReadingResult | null {
+export function getLastReading(userId?: string | null): ReadingResult | null {
   if (!isBrowser()) return null;
   try {
-    const raw = localStorage.getItem(KEYS.lastReading);
-    return raw ? (JSON.parse(raw) as ReadingResult) : null;
+    const keyed = localStorage.getItem(lastReadingKey(userId));
+    if (keyed) return JSON.parse(keyed) as ReadingResult;
+    if (userId) {
+      const legacy = localStorage.getItem(KEYS.lastReading);
+      if (legacy) {
+        localStorage.setItem(lastReadingKey(userId), legacy);
+        return JSON.parse(legacy) as ReadingResult;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-export function clearHistory(): void {
+export function clearHistory(userId?: string | null): void {
   if (!isBrowser()) return;
-  localStorage.removeItem(KEYS.history);
-  localStorage.removeItem(KEYS.lastReading);
+  localStorage.removeItem(historyKey(userId));
+  localStorage.removeItem(lastReadingKey(userId));
+  if (userId) {
+    localStorage.removeItem(KEYS.history);
+    localStorage.removeItem(KEYS.lastReading);
+  }
+}
+
+/** Seoul-today daily reading exists in this user's history */
+export function hasDailyHistoryForDate(
+  dateYmd: string,
+  userId?: string | null
+): boolean {
+  return getHistory(userId).some((r) => {
+    if (!r.tags?.includes("daily")) return false;
+    try {
+      const ymd = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(r.createdAt));
+      return ymd === dateYmd;
+    } catch {
+      return false;
+    }
+  });
 }
