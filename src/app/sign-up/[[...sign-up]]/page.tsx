@@ -10,7 +10,7 @@ export default function SignUpPage() {
         </p>
         <h1 className="mt-2 text-2xl font-bold text-heading">회원가입</h1>
         <p className="mt-2 text-sm text-body">
-          가입 후 온보딩을 거쳐 나만의 타로 리딩을 받아보세요.
+          가입 후 사주 프로필과 온보딩을 거쳐 퓨전 리딩을 받아보세요.
         </p>
       </div>
       <SignUp
@@ -18,8 +18,8 @@ export default function SignUpPage() {
         routing="path"
         path="/sign-up"
         signInUrl="/sign-in"
-        fallbackRedirectUrl="/onboarding"
-        forceRedirectUrl="/onboarding"
+        fallbackRedirectUrl="/saju"
+        forceRedirectUrl="/saju"
       />
     </div>
   );

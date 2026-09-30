@@ -10,7 +10,7 @@ export default function SignInPage() {
         </p>
         <h1 className="mt-2 text-2xl font-bold text-heading">로그인</h1>
         <p className="mt-2 text-sm text-body">
-          계정으로 로그인하고 개인화 타로를 이어가세요.
+          계정으로 로그인하고 타로+사주 퓨전 리딩을 이어가세요.
         </p>
       </div>
       <SignIn
@@ -18,8 +18,8 @@ export default function SignInPage() {
         routing="path"
         path="/sign-in"
         signUpUrl="/sign-up"
-        fallbackRedirectUrl="/onboarding"
-        forceRedirectUrl="/onboarding"
+        fallbackRedirectUrl="/saju"
+        forceRedirectUrl="/saju"
       />
     </div>
   );

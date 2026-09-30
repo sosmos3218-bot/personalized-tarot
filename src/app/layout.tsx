@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "별빛 타로 — 나를 위한 개인화 타로",
+  title: "별빛 타로 — 타로+사주 퓨전",
   description:
-    "회원가입 후 온보딩 답변에 맞춘 개인화 타로 리딩. 메이저 아르카나로 오늘의 메시지를 받아보세요.",
+    "사주(만세력) 기운과 타로 카드를 결합한 개인화 퓨전 리딩. 메이저 아르카나와 일간·오행으로 오늘의 메시지를 받아보세요.",
 };
 
 const themeInitScript = `
@@ -51,8 +51,8 @@ export default function RootLayout({
           appearance={clerkAppearance}
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
-          signInFallbackRedirectUrl="/onboarding"
-          signUpFallbackRedirectUrl="/onboarding"
+          signInFallbackRedirectUrl="/saju"
+          signUpFallbackRedirectUrl="/saju"
         >
           <ThemeProvider>
             <Header />
