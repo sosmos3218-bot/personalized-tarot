@@ -60,11 +60,12 @@ export default function LandingPage() {
           <span className="hero-gradient-text">만나는 별빛</span>
         </h1>
         <p className="mx-auto max-w-md text-body leading-relaxed text-[15px] sm:text-base px-1">
-          만세력으로 본 일간·오행 기운과
+          만세력 일간·오행과 고전 타로를 결합한{" "}
+          <strong className="text-accent font-semibold">타로+사주 퓨전</strong>
+          입니다.
           <br className="hidden sm:block" />
-          고전 타로를 결합한{" "}
-          <strong className="text-accent font-semibold">타로+사주 퓨전</strong>{" "}
-          해석을 전해드립니다.
+          가입 → 사주 → <strong className="text-heading font-medium">오늘의 운세</strong>
+          순으로, 맞춤 리딩은 원할 때만.
         </p>
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
           <Link
@@ -74,10 +75,14 @@ export default function LandingPage() {
             {primaryLabel}
           </Link>
           <Link
-            href={loggedIn ? "/draw" : "#how"}
+            href={loggedIn ? (hasSaju ? "/draw" : "/saju") : "#how"}
             className="btn-secondary w-full sm:w-auto"
           >
-            {loggedIn ? "카드 뽑기" : "이용 방법 보기"}
+            {loggedIn
+              ? hasSaju
+                ? "맞춤 리딩 · 카드 뽑기"
+                : "사주부터 등록"
+              : "이용 방법 보기"}
           </Link>
         </div>
 
@@ -125,13 +130,13 @@ export default function LandingPage() {
           },
           {
             step: "02",
-            title: "3가지 질문",
-            desc: "고민 분야 · 기분 · 리딩에서 원하는 것(통찰/행동/위로)",
+            title: "오늘의 운세",
+            desc: "서울 날짜 기준 일간·오행 톤, 운세 점수, 선택적 일일 타로 1장.",
           },
           {
             step: "03",
-            title: "퓨전 리딩",
-            desc: "타로 카드 + 사주 기운을 아우르는 AI 해석과 기록 저장",
+            title: "맞춤 리딩 (선택)",
+            desc: "짧은 질문 후 타로+사주 퓨전 AI 해석. 원치 않으면 건너뛸 수 있어요.",
           },
         ].map((item) => (
           <div key={item.step} className="card-panel text-center !p-5">
@@ -162,8 +167,8 @@ export default function LandingPage() {
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
             <span>
-              <strong className="text-heading">오늘의 운세</strong> — 서울 날짜
-              기준 일간·오행 톤과 운세 점수, 선택적 일일 타로 1장을 제공합니다.
+              <strong className="text-heading">오늘의 운세 우선</strong> — 사주만
+              있으면 바로 일일 리포트. 맞춤 온보딩은 선택입니다.
             </span>
           </li>
           <li className="flex gap-2">
@@ -173,8 +178,7 @@ export default function LandingPage() {
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
             <span>
-              온보딩·사주를 반영한 AI 퓨전 해석(실패 시 템플릿 폴백)을
-              제공합니다.
+              사주를 반영한 AI 퓨전 해석(실패 시 템플릿 폴백)을 제공합니다.
             </span>
           </li>
           <li className="flex gap-2">
