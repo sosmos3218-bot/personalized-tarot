@@ -384,6 +384,22 @@ function SajuForm() {
               <dt className="text-xs text-muted">양력 기준일</dt>
               <dd>{preview.chart.solarDate}</dd>
             </div>
+            {preview.chart.tenGods && (
+              <div className="col-span-2">
+                <dt className="text-xs text-muted">십신 · 천간 / 지지 정기</dt>
+                <dd className="mt-1 space-y-0.5">
+                  <p>년 {preview.chart.tenGods.year.stemKo} / {preview.chart.tenGods.year.branchKo}</p>
+                  <p>월 {preview.chart.tenGods.month.stemKo} / {preview.chart.tenGods.month.branchKo}</p>
+                  <p>일 {preview.chart.tenGods.day.stemKo} / {preview.chart.tenGods.day.branchKo}</p>
+                  <p>
+                    시{" "}
+                    {preview.chart.tenGods.hour
+                      ? `${preview.chart.tenGods.hour.stemKo} / ${preview.chart.tenGods.hour.branchKo}`
+                      : "미상"}
+                  </p>
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
       )}
