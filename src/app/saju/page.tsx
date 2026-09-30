@@ -7,7 +7,7 @@ import AuthGate from "@/components/AuthGate";
 import { buildSajuProfile } from "@/lib/saju";
 import type { CalendarType, Gender, SajuProfile } from "@/lib/saju";
 import { SAJU_DISCLAIMER } from "@/lib/saju";
-import { getOnboarding, getSajuProfile, saveSajuProfile } from "@/lib/storage";
+import { getSajuProfile, saveSajuProfile } from "@/lib/storage";
 
 const YEAR_MIN = 1900;
 const YEAR_MAX = 2100;
@@ -144,11 +144,8 @@ function SajuForm() {
       saveSajuProfile(profile, userId);
       setExisting(profile);
       setPreview(profile);
-      if (getOnboarding(userId)) {
-        router.push("/draw");
-      } else {
-        router.push("/onboarding");
-      }
+      // Prefer today's fortune first; classic draw remains available from /today
+      router.push("/today?welcome=1");
     } catch (e) {
       setError(e instanceof Error ? e.message : "사주 저장에 실패했습니다.");
     }
