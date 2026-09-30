@@ -12,10 +12,7 @@ import { getCardById, drawRandomCards } from "@/lib/cards";
 import {
   buildDailyFortune,
   dailyFortunePlainText,
-  getDailyTarotLock,
   getSeoulTodayYmd,
-  markDailyFortuneViewed,
-  saveDailyTarotLock,
   type DailyFortune,
 } from "@/lib/daily";
 import { buildInterpretation, createReadingId } from "@/lib/interpretation";
@@ -23,8 +20,14 @@ import { SAJU_DISCLAIMER } from "@/lib/saju";
 import {
   getOnboarding,
   getSajuProfile,
-  saveReading,
 } from "@/lib/storage";
+import {
+  loadDailyLock,
+  loadSajuProfile,
+  syncDailyLock,
+  syncMarkDailyViewed,
+  syncSaveReading,
+} from "@/lib/sync";
 import type { DrawnCard, TarotCard } from "@/lib/types";
 import { DEFAULT_ONBOARDING } from "@/lib/types";
 
@@ -89,28 +92,37 @@ function TodayReport() {
   const [alreadyDrawn, setAlreadyDrawn] = useState(false);
 
   const load = useCallback(() => {
-    const saju = getSajuProfile(userId);
-    if (!saju) return;
-    const dateYmd = getSeoulTodayYmd();
-    const f = buildDailyFortune(saju, { userId, dateYmd });
-    setFortune(f);
-    markDailyFortuneViewed(userId, dateYmd);
+    let cancelled = false;
+    async function run() {
+      const saju = (await loadSajuProfile(userId)) ?? getSajuProfile(userId);
+      if (!saju || cancelled) return;
+      const dateYmd = getSeoulTodayYmd();
+      const f = buildDailyFortune(saju, { userId, dateYmd });
+      if (cancelled) return;
+      setFortune(f);
+      void syncMarkDailyViewed(userId, dateYmd, f);
 
-    const lock = getDailyTarotLock(userId, dateYmd);
-    if (lock) {
-      setAlreadyDrawn(true);
-      setReadingId(lock.readingId);
-      const card = getCardById(lock.cardId);
-      if (card) setDrawnCard(card);
-    } else {
-      setAlreadyDrawn(false);
-      setReadingId(null);
-      setDrawnCard(null);
+      const lock = await loadDailyLock(userId, dateYmd);
+      if (cancelled) return;
+      if (lock) {
+        setAlreadyDrawn(true);
+        setReadingId(lock.readingId);
+        const card = getCardById(lock.cardId);
+        if (card) setDrawnCard(card);
+      } else {
+        setAlreadyDrawn(false);
+        setReadingId(null);
+        setDrawnCard(null);
+      }
     }
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   useEffect(() => {
-    load();
+    return load();
   }, [load]);
 
   useEffect(() => {
@@ -200,15 +212,16 @@ function TodayReport() {
       sajuSummary: saju.summaryText,
       tags: ["daily"],
     };
-    saveReading(reading, userId);
-    saveDailyTarotLock(
+    void syncSaveReading(reading, userId);
+    void syncDailyLock(
       {
         dateYmd: fortune.dateYmd,
         cardId: card.id,
         readingId: id,
         lockedAt: new Date().toISOString(),
       },
-      userId
+      userId,
+      fortune
     );
 
     setDrawnCard(card);
