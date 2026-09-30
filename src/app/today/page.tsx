@@ -12,6 +12,7 @@ import {
   dailyFortunePlainText,
   getDailyTarotLock,
   getSeoulTodayYmd,
+  markDailyFortuneViewed,
   saveDailyTarotLock,
   type DailyFortune,
 } from "@/lib/daily";
@@ -88,6 +89,7 @@ function TodayReport() {
     const dateYmd = getSeoulTodayYmd();
     const f = buildDailyFortune(saju, { userId, dateYmd });
     setFortune(f);
+    markDailyFortuneViewed(userId, dateYmd);
 
     const lock = getDailyTarotLock(userId, dateYmd);
     if (lock) {
@@ -194,7 +196,7 @@ function TodayReport() {
       sajuSummary: saju.summaryText,
       tags: ["daily"],
     };
-    saveReading(reading);
+    saveReading(reading, userId);
     saveDailyTarotLock(
       {
         dateYmd: fortune.dateYmd,
