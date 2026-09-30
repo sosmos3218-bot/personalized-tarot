@@ -12,7 +12,7 @@
     "@ai-sdk/gateway": "^1.0.15",
     "@clerk/localizations": "^3.37.9",
     "@clerk/nextjs": "^6.39.7",
-    "@vercel/blob": "^2.0.0",
+    "@vercel/blob": "^2.8.0",
     "ai": "^5.0.262",
     "next": "15.5.25",
     "react": "^19.1.4",
