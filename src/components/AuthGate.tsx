@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { getOnboarding, getSajuProfile } from "@/lib/storage";
+import { loadSajuProfile } from "@/lib/sync";
 
 interface Props {
   children: React.ReactNode;
@@ -25,29 +26,44 @@ export default function AuthGate({
 
   useEffect(() => {
     if (!isLoaded) return;
+    let cancelled = false;
 
-    if (!isSignedIn || !userId) {
-      router.replace("/sign-in");
-      return;
+    async function gate() {
+      if (!isSignedIn || !userId) {
+        router.replace("/sign-in");
+        return;
+      }
+
+      if (requireSaju) {
+        let saju = getSajuProfile(userId);
+        if (!saju) {
+          saju = await loadSajuProfile(userId);
+        }
+        if (cancelled) return;
+        if (!saju) {
+          const from = pathname && pathname !== "/saju" ? pathname : "";
+          const params = new URLSearchParams({ need: "saju" });
+          if (from) params.set("from", from);
+          router.replace(`/saju?${params.toString()}`);
+          return;
+        }
+      }
+
+      if (requireOnboarding && !getOnboarding(userId)) {
+        const from = pathname && pathname !== "/onboarding" ? pathname : "";
+        const params = new URLSearchParams({ soft: "1" });
+        if (from) params.set("from", from);
+        router.replace(`/onboarding?${params.toString()}`);
+        return;
+      }
+
+      if (!cancelled) setReady(true);
     }
 
-    if (requireSaju && !getSajuProfile(userId)) {
-      const from = pathname && pathname !== "/saju" ? pathname : "";
-      const params = new URLSearchParams({ need: "saju" });
-      if (from) params.set("from", from);
-      router.replace(`/saju?${params.toString()}`);
-      return;
-    }
-
-    if (requireOnboarding && !getOnboarding(userId)) {
-      const from = pathname && pathname !== "/onboarding" ? pathname : "";
-      const params = new URLSearchParams({ soft: "1" });
-      if (from) params.set("from", from);
-      router.replace(`/onboarding?${params.toString()}`);
-      return;
-    }
-
-    setReady(true);
+    void gate();
+    return () => {
+      cancelled = true;
+    };
   }, [
     isLoaded,
     isSignedIn,
