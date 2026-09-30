@@ -14,5 +14,17 @@ export {
   parseYmd,
   isLunarYearSupported,
 } from "./lunar";
-export { jieTermsForYear, lichunOfYear, monthBranchAtKst, sajuYearAtKst } from "./solarTerms";
-export { pillarTenGods } from "./tenGods";
+export {
+  jieTermsForYear,
+  lichunOfYear,
+  monthBranchAtKst,
+  sajuYearAtKst,
+  jieNeighborsAtKst,
+} from "./solarTerms";
+export { pillarTenGods, branchMainStemIndex } from "./tenGods";
+export {
+  hiddenStemsForBranch,
+  mainStemIndex,
+  formatHiddenStems,
+} from "./jijanggan";
+export { computeDaeun, daeunDirection, formatDaeunCompact } from "./daeun";
