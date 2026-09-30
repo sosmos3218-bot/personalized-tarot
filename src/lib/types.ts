@@ -30,6 +30,13 @@ export interface OnboardingAnswers {
   goal: ReadingGoal;
 }
 
+/** 오늘의 운세·스킵 시 쓰는 기본 온보딩 (맞춤 리딩 전에 바꿀 수 있음) */
+export const DEFAULT_ONBOARDING: OnboardingAnswers = {
+  concern: "growth",
+  mood: "curious",
+  goal: "insight",
+};
+
 export interface TarotCard {
   id: number;
   nameKo: string;

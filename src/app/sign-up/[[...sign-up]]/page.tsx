@@ -9,8 +9,10 @@ export default function SignUpPage() {
           SIGN UP
         </p>
         <h1 className="mt-2 text-2xl font-bold text-heading">회원가입</h1>
-        <p className="mt-2 text-sm text-body">
-          가입 후 사주 프로필과 온보딩을 거쳐 퓨전 리딩을 받아보세요.
+        <p className="mt-2 text-sm text-body leading-relaxed px-2">
+          가입 → 사주 →{" "}
+          <strong className="text-heading font-medium">오늘의 운세</strong>.
+          타로+사주 퓨전으로 하루를 열어보세요. 맞춤 리딩은 선택입니다.
         </p>
       </div>
       <SignUp

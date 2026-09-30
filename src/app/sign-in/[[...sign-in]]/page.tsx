@@ -9,8 +9,10 @@ export default function SignInPage() {
           SIGN IN
         </p>
         <h1 className="mt-2 text-2xl font-bold text-heading">로그인</h1>
-        <p className="mt-2 text-sm text-body">
-          계정으로 로그인하고 타로+사주 퓨전 리딩을 이어가세요.
+        <p className="mt-2 text-sm text-body leading-relaxed px-2">
+          로그인 후 사주를 등록하면{" "}
+          <strong className="text-heading font-medium">오늘의 운세</strong>와
+          타로+사주 퓨전 리딩을 이어갈 수 있어요.
         </p>
       </div>
       <SignIn

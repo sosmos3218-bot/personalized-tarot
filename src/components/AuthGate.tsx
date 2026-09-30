@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { getOnboarding, getSajuProfile } from "@/lib/storage";
 
 interface Props {
   children: React.ReactNode;
+  /** 맞춤 리딩용 온보딩 필수 — /today는 요구하지 않음 */
   requireOnboarding?: boolean;
-  /** 사주 프로필 필수 (기본: requireOnboarding과 동일하게 적용하려면 명시) */
+  /** 사주 프로필 필수 */
   requireSaju?: boolean;
 }
 
@@ -18,6 +19,7 @@ export default function AuthGate({
   requireSaju = false,
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isLoaded, isSignedIn, userId } = useAuth();
   const [ready, setReady] = useState(false);
 
@@ -30,17 +32,31 @@ export default function AuthGate({
     }
 
     if (requireSaju && !getSajuProfile(userId)) {
-      router.replace("/saju");
+      const from = pathname && pathname !== "/saju" ? pathname : "";
+      const params = new URLSearchParams({ need: "saju" });
+      if (from) params.set("from", from);
+      router.replace(`/saju?${params.toString()}`);
       return;
     }
 
     if (requireOnboarding && !getOnboarding(userId)) {
-      router.replace("/onboarding");
+      const from = pathname && pathname !== "/onboarding" ? pathname : "";
+      const params = new URLSearchParams({ soft: "1" });
+      if (from) params.set("from", from);
+      router.replace(`/onboarding?${params.toString()}`);
       return;
     }
 
     setReady(true);
-  }, [isLoaded, isSignedIn, userId, router, requireOnboarding, requireSaju]);
+  }, [
+    isLoaded,
+    isSignedIn,
+    userId,
+    router,
+    pathname,
+    requireOnboarding,
+    requireSaju,
+  ]);
 
   if (!isLoaded || !ready) {
     return (
