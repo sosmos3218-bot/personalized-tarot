@@ -15,9 +15,12 @@ Clerk 인증과 Vercel AI Gateway 기반 해석(실패 시 템플릿 폴백)을 
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` |
 | `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | `/saju` |
 | `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | `/saju` |
-| `AI_GATEWAY_API_KEY` | (선택) Vercel AI Gateway — 없으면 템플릿 해석 |
+| `AI_GATEWAY_API_KEY` | (선택) Vercel AI Gateway API 키 — 있으면 우선 사용. 없으면 템플릿 해석 |
+| `TAROT_AI_MODEL` | (선택) Gateway 모델 id. 기본값 `inclusionai/ling-3.1-flash-free` (무료) |
 
 **빌드:** `next build`는 Clerk 키가 필요합니다. `.env.local`은 gitignore 대상입니다. 시크릿을 커밋하지 마세요.
+
+**AI Gateway:** 로컬은 `AI_GATEWAY_API_KEY`를 권장합니다. Vercel 배포 환경에서는 Hobby AI Gateway 크레딧과 OIDC(`VERCEL` / `VERCEL_OIDC_TOKEN`)로 키 없이도 시도할 수 있습니다. 모델은 `TAROT_AI_MODEL`로 덮어쓸 수 있으며, 기본은 무료 모델 `inclusionai/ling-3.1-flash-free`입니다. 실패 시 항상 템플릿으로 폴백합니다.
 
 ## 실행 방법
 
@@ -77,7 +80,7 @@ npm start
 
 - Next.js App Router + TypeScript + Tailwind CSS
 - Clerk (`@clerk/nextjs`) + `@clerk/localizations` (ko-KR)
-- Vercel AI SDK (`ai`) + AI Gateway (`openai/gpt-5-mini`)
+- Vercel AI SDK (`ai`) + AI Gateway (기본 `inclusionai/ling-3.1-flash-free`, `TAROT_AI_MODEL`로 변경 가능)
 - 상태: localStorage (사주·온보딩·히스토리)
 
 ## 참고

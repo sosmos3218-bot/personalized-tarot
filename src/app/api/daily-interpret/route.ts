@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
+import { canAttemptAi, getTarotModel } from "@/lib/ai";
 import { sajuPromptBlock } from "@/lib/saju";
 import type { SajuProfile } from "@/lib/saju";
 
@@ -44,8 +45,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
-  if (!apiKey) {
+  if (!canAttemptAi()) {
     return NextResponse.json({
       source: "template" as const,
       message: "AI 키가 없어 템플릿을 유지합니다.",
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
   try {
     const { text } = await generateText({
-      model: "openai/gpt-5-mini",
+      model: getTarotModel(),
       system: SYSTEM_PROMPT,
       prompt: `날짜(서울): ${body.dateYmd ?? "오늘"}
 

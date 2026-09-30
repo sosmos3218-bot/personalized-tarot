@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
+import { canAttemptAi, getTarotModel } from "@/lib/ai";
 import { buildInterpretation } from "@/lib/interpretation";
 import { sajuPromptBlock } from "@/lib/saju";
 import type { SajuProfile } from "@/lib/saju";
@@ -94,8 +95,7 @@ export async function POST(req: Request) {
 
   const templateText = buildInterpretation(cards, onboarding, spread, saju);
 
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
-  if (!apiKey) {
+  if (!canAttemptAi()) {
     return NextResponse.json({
       source: "template" as const,
       text: templateText,
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
 
   try {
     const { text } = await generateText({
-      model: "openai/gpt-5-mini",
+      model: getTarotModel(),
       system: SYSTEM_PROMPT,
       prompt: buildUserPrompt(cards, onboarding, spread, saju),
       maxOutputTokens: 1600,
