@@ -7,7 +7,8 @@
  * - 시주는 입력 HH:mm(KST) 기준, 야자시·조자시 구분 없음.
  * - 위도/경도·서머타임·진태양시 미반영.
  * - 음력은 1900–2100 비트테이블; 지역 만세력과 하루 차이 날 수 있음.
- * - 십신은 천간·지지 정기만. 대운·신살·지장간 전체는 없음.
+ * - 십신은 천간·지지 정기. 지장간·대운은 간이 규칙(절입÷3).
+ * - 신살 없음.
  */
 import {
   BRANCHES,
@@ -16,6 +17,11 @@ import {
   STEMS,
   YIN_YANG_LABELS,
 } from "./constants";
+import { computeDaeun, formatDaeunCompact } from "./daeun";
+import {
+  formatHiddenStems,
+  hiddenStemsForBranch,
+} from "./jijanggan";
 import {
   formatYmd,
   lunarToSolar,
@@ -28,7 +34,9 @@ import {
   SAJU_DISCLAIMER,
   type DayMaster,
   type Gender,
+  type JijangganSet,
   type Pillar,
+  type PillarJijanggan,
   type SajuChart,
   type SajuInput,
   type SajuProfile,
@@ -71,7 +79,7 @@ function dayPillar(y: number, m: number, d: number): Pillar {
 }
 
 /**
- * 연주: 입춘(근사 2/4) 이전이면 전년.
+ * 연주: 입춘 이전이면 전년.
  * 연간지: (year - 4) % 10/12
  */
 function yearPillar(
@@ -138,6 +146,15 @@ function dayMasterFromStem(stemIndex: number): DayMaster {
     element: stem.element,
     elementLabel: ELEMENT_LABELS[stem.element],
     elementTrait: ELEMENT_TRAITS[stem.element],
+  };
+}
+
+function pillarJijanggan(p: Pillar): PillarJijanggan {
+  return {
+    branchHan: p.branchHan,
+    branchKo: p.branchKo,
+    stems: hiddenStemsForBranch(p.branchIndex),
+    compact: formatHiddenStems(p.branchIndex),
   };
 }
 
@@ -211,7 +228,26 @@ export function computeSaju(input: SajuInput): SajuChart {
       : null,
   };
 
+  const jijanggan: JijangganSet = {
+    year: pillarJijanggan(year),
+    month: pillarJijanggan(month),
+    day: pillarJijanggan(day),
+    hour: hour ? pillarJijanggan(hour) : null,
+  };
+
   const gender: Gender = input.gender ?? "unspecified";
+
+  const daeun = computeDaeun({
+    yearStemIndex: year.stemIndex,
+    monthPillar: month,
+    gender,
+    y,
+    m,
+    d,
+    hour: hh,
+    minute: mm,
+    count: 10,
+  });
 
   return {
     year,
@@ -226,6 +262,8 @@ export function computeSaju(input: SajuInput): SajuChart {
     timeUnknown,
     gender,
     tenGods,
+    jijanggan,
+    daeun,
     disclaimer: SAJU_DISCLAIMER,
     computedAt: new Date().toISOString(),
   };
@@ -264,6 +302,7 @@ export function sajuPromptBlock(profile: SajuProfile | null | undefined): string
   if (!profile?.chart) return "사주 정보 없음";
   const c = profile.chart;
   const dm = c.dayMaster;
+  const jj = c.jijanggan;
   const lines = [
     `일간(日干): ${dm.stemHan}(${dm.stemKo}) / ${dm.yinYangLabel} / ${dm.elementLabel} — ${dm.elementTrait}`,
     `년주: ${c.year.label}`,
@@ -273,6 +312,10 @@ export function sajuPromptBlock(profile: SajuProfile | null | undefined): string
     c.tenGods
       ? `십신(천간/지지정기): 년 ${c.tenGods.year.stemKo}/${c.tenGods.year.branchKo} · 월 ${c.tenGods.month.stemKo}/${c.tenGods.month.branchKo} · 일 ${c.tenGods.day.stemKo}/${c.tenGods.day.branchKo}${c.tenGods.hour ? ` · 시 ${c.tenGods.hour.stemKo}/${c.tenGods.hour.branchKo}` : ""}`
       : null,
+    jj
+      ? `지장간: 년 ${jj.year.compact} · 월 ${jj.month.compact} · 일 ${jj.day.compact}${jj.hour ? ` · 시 ${jj.hour.compact}` : ""}`
+      : null,
+    formatDaeunCompact(c.daeun ?? null),
     `양력 기준일: ${c.solarDate}`,
     c.calendarType === "lunar" && c.lunarDate
       ? `입력 음력: ${c.lunarDate}`
@@ -284,7 +327,6 @@ export function sajuPromptBlock(profile: SajuProfile | null | undefined): string
   ];
   return lines.filter(Boolean).join("\n");
 }
-
 
 /** 양력 YYYY-MM-DD의 일주(日柱) — 오늘의 운세 등에서 재사용 */
 export function getDayPillarForSolarDate(ymd: string): Pillar {
