@@ -12,8 +12,13 @@ import {
   getHistory,
   getLastReading,
   getSajuProfile,
-  updateReadingInterpretation,
 } from "@/lib/storage";
+import {
+  ensureMigrated,
+  fetchServerReading,
+  loadSajuProfile,
+  syncUpdateInterpretation,
+} from "@/lib/sync";
 import type { ReadingResult } from "@/lib/types";
 import {
   CONCERN_LABELS,
@@ -47,14 +52,27 @@ function ResultContent() {
   const fetchedForId = useRef<string | null>(null);
 
   useEffect(() => {
-    const id = searchParams.get("id");
-    if (id) {
-      const found = getHistory(userId).find((r) => r.id === id);
-      setReading(found ?? getLastReading(userId));
-    } else {
-      setReading(getLastReading(userId));
+    let cancelled = false;
+    async function load() {
+      const id = searchParams.get("id");
+      if (userId) await ensureMigrated(userId);
+      let found: ReadingResult | null = null;
+      if (id) {
+        found =
+          (userId ? await fetchServerReading(id) : null) ??
+          getHistory(userId).find((r) => r.id === id) ??
+          null;
+      }
+      if (!found) found = getLastReading(userId);
+      const saju = await loadSajuProfile(userId);
+      if (cancelled) return;
+      setReading(found);
+      setSaju(saju ?? getSajuProfile(userId));
     }
-    setSaju(getSajuProfile(userId));
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams, userId]);
 
   useEffect(() => {
@@ -109,7 +127,7 @@ function ResultContent() {
               }
             : prev
         );
-        updateReadingInterpretation(reading!.id, data.text, data.source, userId);
+        void syncUpdateInterpretation(reading!.id, data.text, data.source, userId);
 
         if (data.source === "template" && data.message) {
           setAiError(data.message);
