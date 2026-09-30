@@ -9,7 +9,8 @@ import ProgressSteps from "@/components/ProgressSteps";
 import TarotCardFace from "@/components/TarotCardFace";
 import { drawRandomCards } from "@/lib/cards";
 import { buildInterpretation, createReadingId } from "@/lib/interpretation";
-import { getOnboarding, getSajuProfile, saveReading } from "@/lib/storage";
+import { getOnboarding, getSajuProfile } from "@/lib/storage";
+import { syncSaveReading } from "@/lib/sync";
 import type { DrawnCard, SpreadType } from "@/lib/types";
 import {
   DEFAULT_ONBOARDING,
@@ -91,7 +92,7 @@ function DrawFlow() {
           interpretationSource: "template" as const,
           sajuSummary: saju.summaryText,
         };
-        saveReading(reading, userId);
+        void syncSaveReading(reading, userId);
         setTimeout(() => {
           router.push(`/result?id=${reading.id}`);
         }, 700);
