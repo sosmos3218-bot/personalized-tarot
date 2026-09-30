@@ -70,7 +70,7 @@ function SettingsForm() {
       setPrefs(data.prefs);
       setMsg(
         enabled
-          ? `매일 오전 ${hour}시(서울)에 오늘의 운세 메일 알림을 받습니다. (옵트인)`
+          ? `매일 아침(서울 08:00 전후, Hobby 크론) 오늘의 운세 메일을 받습니다. (옵트인)`
           : "메일 알림을 끄셨습니다."
       );
     } catch (e) {
@@ -178,8 +178,7 @@ function SettingsForm() {
         <code className="text-[11px]">RESEND_FROM_EMAIL</code> 이 필요합니다.
         설정되어 있지 않으면 크론이 발송을 건너뛰고 로그만 남깁니다. Vercel Cron
         은 <code className="text-[11px]">vercel.json</code> 의{" "}
-        <code className="text-[11px]">/api/cron/daily-reminder</code> 를 매시
-        정각에 호출합니다.
+        <code className="text-[11px]">/api/cron/daily-reminder</code> 를 매일 08:00 KST(UTC 23:00)에 호출합니다(Hobby 일 1회). 옵트인한 계정에 그날 한 번 발송합니다.
         {emailReady ? null : null}
       </p>
 
