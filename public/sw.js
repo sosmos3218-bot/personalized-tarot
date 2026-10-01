@@ -28,8 +28,8 @@ self.addEventListener("push", (event) => {
   }
   const options = {
     body: data.body || "오늘의 운세가 준비됐어요.",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+    icon: "/icons/icon.svg",
+    badge: "/icons/icon.svg",
     data: { url: data.url || "/today" },
     lang: "ko",
     vibrate: [80, 40, 80],
