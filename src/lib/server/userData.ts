@@ -7,10 +7,28 @@ const HISTORY_LIMIT = 50;
 
 export interface ReminderPrefs {
   emailEnabled: boolean;
+  /** Opt-in for daily Web Push (오늘의 운세) */
+  pushEnabled?: boolean;
   /** Hour 0–23 in Asia/Seoul */
   hourKst: number;
-  /** Last Seoul YMD we already sent for */
+  /** Last Seoul YMD we already sent email for */
   lastSentYmd?: string | null;
+  /** Last Seoul YMD we already sent push for */
+  lastPushYmd?: string | null;
+  updatedAt: string;
+}
+
+export interface StoredPushSubscription {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: { p256dh: string; auth: string };
+  userAgent?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PushSubscriptionsDoc {
+  items: StoredPushSubscription[];
   updatedAt: string;
 }
 
@@ -37,6 +55,9 @@ function dailyPath(userId: string, dateYmd: string) {
 }
 function prefsPath(userId: string) {
   return userPath(userId, "prefs.json");
+}
+function pushPath(userId: string) {
+  return userPath(userId, "push-subscriptions.json");
 }
 
 export async function getHistoryDoc(userId: string): Promise<HistoryDoc> {
@@ -113,7 +134,6 @@ export async function mergeReadings(
       byId.set(r.id, r);
       continue;
     }
-    // Prefer AI interpretation / newer timestamps
     const preferLocal =
       (r.interpretationSource === "ai" && prev.interpretationSource !== "ai") ||
       new Date(r.createdAt).getTime() >= new Date(prev.createdAt).getTime();
@@ -172,7 +192,6 @@ export async function savePrefs(
   await writeJsonBlob(prefsPath(userId), prefs);
 }
 
-/** List user ids that have prefs (for cron). Best-effort via blob list prefix. */
 export async function listUserIdsWithPrefs(): Promise<string[]> {
   const { list } = await import("@vercel/blob");
   const ids = new Set<string>();
@@ -184,8 +203,80 @@ export async function listUserIdsWithPrefs(): Promise<string[]> {
       limit: 1000,
     });
     for (const b of page.blobs) {
-      // users/{userId}/prefs.json
       const m = /^users\/([^/]+)\/prefs\.json$/.exec(b.pathname);
+      if (m) ids.add(m[1]);
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return [...ids];
+}
+
+export async function getPushSubscriptions(
+  userId: string
+): Promise<PushSubscriptionsDoc> {
+  const doc = await readJsonBlob<PushSubscriptionsDoc>(pushPath(userId));
+  return doc ?? { items: [], updatedAt: new Date().toISOString() };
+}
+
+export async function upsertPushSubscription(
+  userId: string,
+  sub: Omit<StoredPushSubscription, "createdAt" | "updatedAt"> & {
+    createdAt?: string;
+  }
+): Promise<PushSubscriptionsDoc> {
+  const doc = await getPushSubscriptions(userId);
+  const now = new Date().toISOString();
+  const prev = doc.items.find((i) => i.endpoint === sub.endpoint);
+  const nextItem: StoredPushSubscription = {
+    endpoint: sub.endpoint,
+    expirationTime: sub.expirationTime ?? null,
+    keys: sub.keys,
+    userAgent: sub.userAgent ?? null,
+    createdAt: prev?.createdAt ?? sub.createdAt ?? now,
+    updatedAt: now,
+  };
+  const items = [
+    nextItem,
+    ...doc.items.filter((i) => i.endpoint !== sub.endpoint),
+  ].slice(0, 10);
+  const next: PushSubscriptionsDoc = { items, updatedAt: now };
+  await writeJsonBlob(pushPath(userId), next);
+  return next;
+}
+
+export async function removePushSubscription(
+  userId: string,
+  endpoint: string
+): Promise<PushSubscriptionsDoc> {
+  const doc = await getPushSubscriptions(userId);
+  const items = doc.items.filter((i) => i.endpoint !== endpoint);
+  const next: PushSubscriptionsDoc = {
+    items,
+    updatedAt: new Date().toISOString(),
+  };
+  await writeJsonBlob(pushPath(userId), next);
+  return next;
+}
+
+export async function clearPushSubscriptions(userId: string): Promise<void> {
+  await writeJsonBlob(pushPath(userId), {
+    items: [],
+    updatedAt: new Date().toISOString(),
+  } satisfies PushSubscriptionsDoc);
+}
+
+export async function listUserIdsWithPush(): Promise<string[]> {
+  const { list } = await import("@vercel/blob");
+  const ids = new Set<string>();
+  let cursor: string | undefined;
+  do {
+    const page = await list({
+      prefix: "users/",
+      cursor,
+      limit: 1000,
+    });
+    for (const b of page.blobs) {
+      const m = /^users\/([^/]+)\/push-subscriptions\.json$/.exec(b.pathname);
       if (m) ids.add(m[1]);
     }
     cursor = page.hasMore ? page.cursor : undefined;
