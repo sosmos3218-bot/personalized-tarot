@@ -14,6 +14,7 @@ const isProtectedRoute = createRouteMatcher([
   "/api/saju-profile(.*)",
   "/api/daily-lock(.*)",
   "/api/prefs(.*)",
+  "/api/push(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
