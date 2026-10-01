@@ -22,6 +22,10 @@ Clerk 인증과 Vercel AI Gateway 기반 해석(실패 시 템플릿 폴백)을 
 | `RESEND_API_KEY` | (선택) 일일 운세 메일 — [Resend](https://resend.com) |
 | `RESEND_FROM_EMAIL` | (선택) 발신 주소. 기본 `별빛 타로 <onboarding@resend.dev>` |
 | `CRON_SECRET` | (선택) `/api/cron/daily-reminder` Bearer 보호 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push 공개 VAPID 키 (클라이언트) |
+| `VAPID_PUBLIC_KEY` | Web Push 공개 VAPID 키 (서버, 공개와 동일) |
+| `VAPID_PRIVATE_KEY` | Web Push 비공개 VAPID 키 — **커밋 금지** |
+| `VAPID_SUBJECT` | `mailto:` 또는 `https://` contact URL |
 
 **빌드:** `next build`는 Clerk 키가 필요합니다. `.env.local`은 gitignore 대상입니다. 시크릿을 커밋하지 마세요.
 
@@ -55,6 +59,7 @@ npm start
 8. **결과 · 기록** — 사주 요약 · 타로 카드 · 퓨전 해석 블록, **서버 히스토리**(Vercel Blob) + 로컬 캐시
 9. **사주 심화** — 진태양시 · 야자시 · 신살(도화·화개·역마·공망·천을귀인)
 10. **일일 메일 알림** — `/settings` 옵트인 + Vercel Cron (`vercel.json`)
+11. **PWA + Web Push** — manifest/서비스워커, `/settings` 「푸시로 오늘의 운세 받기」, 동일 크론에서 푸시 발송
 
 ### 라우트
 
@@ -69,12 +74,15 @@ npm start
 | `/draw` | 카드 뽑기 (보호, 사주 필요) |
 | `/result` | 리딩 결과 (보호) |
 | `/history` | 서버 동기화 리딩 기록 (보호) |
-| `/settings` | 일일 운세 메일 알림 (보호) |
+| `/settings` | 일일 운세 메일·푸시 알림 (보호) |
+| `/api/push/subscribe` | Web Push 구독 저장·해제 (보호) |
+| `/manifest.webmanifest` | PWA 매니페스트 |
+| `/sw.js` | 푸시·알림 클릭 서비스 워커 |
 | `/api/history` | 리딩 저장·목록·마이그레이션 (보호) |
 | `/api/saju-profile` | 사주 프로필 서버 저장 (보호) |
 | `/api/daily-lock` | 오늘의 타로 락 (보호) |
 | `/api/prefs` | 알림 설정 (보호) |
-| `/api/cron/daily-reminder` | 매시 정각 메일 크론 |
+| `/api/cron/daily-reminder` | 매일 08:00 KST 메일+푸시 크론 |
 | `/api/interpret` | AI/템플릿 퓨전 해석 API (보호) |
 
 ### 사주 계산 (MVP · 참고용)
@@ -97,6 +105,22 @@ npm start
 - Clerk (`@clerk/nextjs`) + `@clerk/localizations` (ko-KR)
 - Vercel AI SDK (`ai`) + AI Gateway (기본 `inclusionai/ling-3.1-flash-free`, `TAROT_AI_MODEL`로 변경 가능)
 - 상태: Vercel Blob (사주·히스토리·데일리·알림설정) + localStorage 캐시
+
+## PWA · Web Push
+
+휴대폰에서 네이티브 앱 없이 「오늘의 운세」 아침 알림을 받습니다.
+
+1. **설정** (`/settings`)에서 **푸시로 오늘의 운세 받기**를 켠다.
+2. 브라우저 알림 권한을 허용한다.
+3. Vercel Cron(`0 23 * * *` UTC ≈ 08:00 KST)이 옵트인 구독에 한국어 푸시를 보내고, 탭 시 `/today`로 이동한다.
+
+### 테스트
+
+- **Android Chrome:** 사이트 열기 → 알림 허용 → 설정에서 푸시 ON. (선택) 홈 화면 추가.
+- **iOS Safari (16.4+):** **공유 → 홈 화면에 추가**가 필요합니다. 홈 화면 아이콘으로 연 뒤에만 안정적으로 푸시가 동작합니다. 일반 Safari 탭만으로는 제한적입니다.
+- 수동 크론 확인: `Authorization: Bearer $CRON_SECRET`으로 `GET /api/cron/daily-reminder` (프로덕션).
+
+구독은 Vercel Blob `users/{userId}/push-subscriptions.json`에 저장됩니다.
 
 ## 참고
 
