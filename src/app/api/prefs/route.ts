@@ -6,8 +6,10 @@ export const runtime = "nodejs";
 
 const DEFAULT: ReminderPrefs = {
   emailEnabled: false,
+  pushEnabled: false,
   hourKst: 8,
   lastSentYmd: null,
+  lastPushYmd: null,
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -18,7 +20,13 @@ export async function GET() {
   }
   try {
     const prefs = (await getPrefs(userId)) ?? DEFAULT;
-    return NextResponse.json({ prefs });
+    return NextResponse.json({
+      prefs: {
+        ...DEFAULT,
+        ...prefs,
+        pushEnabled: Boolean(prefs.pushEnabled),
+      },
+    });
   } catch (e) {
     console.error("[prefs GET]", e);
     return NextResponse.json({ error: "설정 조회 실패" }, { status: 500 });
@@ -33,6 +41,7 @@ export async function PUT(req: Request) {
   try {
     const body = (await req.json()) as {
       emailEnabled?: boolean;
+      pushEnabled?: boolean;
       hourKst?: number;
     };
     const prev = (await getPrefs(userId)) ?? DEFAULT;
@@ -45,8 +54,13 @@ export async function PUT(req: Request) {
         typeof body.emailEnabled === "boolean"
           ? body.emailEnabled
           : prev.emailEnabled,
+      pushEnabled:
+        typeof body.pushEnabled === "boolean"
+          ? body.pushEnabled
+          : Boolean(prev.pushEnabled),
       hourKst: hour,
       lastSentYmd: prev.lastSentYmd ?? null,
+      lastPushYmd: prev.lastPushYmd ?? null,
       updatedAt: new Date().toISOString(),
     };
     await savePrefs(userId, prefs);
