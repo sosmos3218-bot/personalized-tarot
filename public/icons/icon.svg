@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="별빛 타로">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a1858"/>
+      <stop offset="100%" stop-color="#1a1035"/>
+    </linearGradient>
+    <radialGradient id="gold" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#ffe08a"/>
+      <stop offset="70%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#8a6010"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <circle cx="256" cy="250" r="110" fill="url(#gold)"/>
+  <path d="M256 150 L272 220 L344 220 L286 262 L308 332 L256 290 L204 332 L226 262 L168 220 L240 220 Z" fill="#fff6d6" opacity="0.95"/>
+</svg>
