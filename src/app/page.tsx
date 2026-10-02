@@ -60,11 +60,11 @@ export default function LandingPage() {
           <span className="hero-gradient-text">만나는 별빛</span>
         </h1>
         <p className="mx-auto max-w-md text-body leading-relaxed text-[15px] sm:text-base px-1">
-          만세력 일간·오행과 고전 타로를 결합한{" "}
-          <strong className="text-accent font-semibold">타로+사주 퓨전</strong>
-          입니다.
+          생년월일로 보는{" "}
+          <strong className="text-accent font-semibold">나의 기운</strong>과
+          고전 타로를 함께 읽는 서비스입니다.
           <br className="hidden sm:block" />
-          가입 → 사주 → <strong className="text-heading font-medium">오늘의 운세</strong>
+          가입 → 출생 정보 → <strong className="text-heading font-medium">오늘의 운세</strong>
           순으로, 맞춤 리딩은 원할 때만.
         </p>
         <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
@@ -126,12 +126,12 @@ export default function LandingPage() {
           {
             step: "01",
             title: "가입 · 사주",
-            desc: "로그인 후 생년월일로 일간·간지(만세력 MVP)를 등록합니다.",
+            desc: "로그인 후 생년월일로 나를 나타내는 기운을 등록합니다.",
           },
           {
             step: "02",
             title: "오늘의 운세",
-            desc: "서울 날짜 기준 일간·오행 톤, 운세 점수, 선택적 일일 타로 1장.",
+            desc: "서울 날짜 기준 오늘의 흐름, 운세 점수, 선택적 일일 타로 1장.",
           },
           {
             step: "03",
@@ -160,7 +160,7 @@ export default function LandingPage() {
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
             <span>
-              <strong className="text-heading">타로+사주 퓨전</strong> — 일간·오행
+              <strong className="text-heading">타로+사주 퓨전</strong> — 나의 기운
               요약과 메이저 아르카나를 함께 읽습니다.
             </span>
           </li>
@@ -184,7 +184,7 @@ export default function LandingPage() {
           <li className="flex gap-2">
             <span className="text-accent shrink-0">·</span>
             <span>
-              MVP 만세력은 참고용이며, 전문 명리를 대체하지 않습니다.
+              출생 기운 계산은 참고용이며, 전문 상담을 대체하지 않습니다.
             </span>
           </li>
         </ul>
@@ -194,7 +194,7 @@ export default function LandingPage() {
         엔터테인먼트·셀프 리플렉션 목적 · 실제 점술·의료·법률 조언을 대체하지
         않습니다
         <br />
-        MVP 만세력은 참고용이며 전문 명리가 아닙니다
+        출생 기운 계산은 참고용이며 전문 상담이 아닙니다
       </section>
     </div>
   );
