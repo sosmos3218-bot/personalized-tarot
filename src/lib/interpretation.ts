@@ -9,6 +9,7 @@ import type {
 import { CONCERN_LABELS, GOAL_LABELS, MOOD_LABELS } from "./types";
 import type { SajuProfile } from "./saju/types";
 import { SAJU_DISCLAIMER } from "./saju/types";
+import { ELEMENT_PLAIN, formatSajuSummaryPlain } from "./saju/plain";
 
 const CONCERN_OPENERS: Record<ConcernCategory, string> = {
   love: "연애와 사랑의 길을 묻는 당신에게",
@@ -55,17 +56,18 @@ const GOAL_SUMMARIES: Record<ReadingGoal, string> = {
 function sajuBlock(saju?: SajuProfile | null): string {
   if (!saju?.chart) {
     return [
-      "## 사주 기운",
-      "사주 프로필이 없어 일반 타로 중심으로 안내합니다.",
+      "## 오늘의 기운",
+      "출생 기운 정보가 없어 타로 중심으로 안내합니다.",
       "",
     ].join("\n");
   }
   const dm = saju.chart.dayMaster;
+  const el = ELEMENT_PLAIN[dm.element];
   return [
-    "## 사주 기운",
-    `일간 ${dm.stemHan}(${dm.stemKo}) — ${dm.yinYangLabel} · ${dm.elementLabel}`,
-    `${dm.elementTrait}의 기운이 바탕에 있습니다.`,
-    `기둥: ${saju.summaryText}`,
+    "## 오늘의 기운",
+    `「일간(나를 나타내는 기운)」 ${dm.stemHan}(${dm.stemKo}) — ${el} 성향`,
+    `${dm.elementTrait}의 흐름이 바탕에 있어요.`,
+    formatSajuSummaryPlain(saju.chart),
     `※ ${SAJU_DISCLAIMER}`,
     "",
   ].join("\n");
@@ -92,9 +94,9 @@ function buildOneCardInterpretation(
     "",
     `✦ 조언: ${card.uprightAdvice}`,
     "",
-    "## 퓨전 메시지",
+    "## 함께 읽는 메시지",
     saju?.chart
-      ? `사주의 ${saju.chart.dayMaster.elementLabel} 기운과 「${card.nameKo}」의 상징이 만나는 지점에서, ${CONCERN_LABELS[answers.concern]}에 대한 오늘의 힌트를 찾아보세요.`
+      ? `${ELEMENT_PLAIN[saju.chart.dayMaster.element]} 기운과 「${card.nameKo}」의 상징이 만나는 지점에서, ${CONCERN_LABELS[answers.concern]}에 대한 오늘의 힌트를 찾아보세요.`
       : `「${card.nameKo}」의 메시지가 오늘의 방향을 비춥니다.`,
     GOAL_CLOSERS[answers.goal](card.nameKo),
     "",
@@ -132,9 +134,9 @@ function buildThreeCardInterpretation(
     "",
     `✦ 종합 조언: ${present.card.uprightAdvice}`,
     "",
-    "## 퓨전 메시지",
+    "## 함께 읽는 메시지",
     saju?.chart
-      ? `일간 ${saju.chart.dayMaster.stemHan}(${saju.chart.dayMaster.stemKo})의 ${saju.chart.dayMaster.elementLabel} 성향과 세 장의 흐름이 어우러집니다.`
+      ? `나를 나타내는 기운 ${saju.chart.dayMaster.stemHan}(${saju.chart.dayMaster.stemKo})의 ${ELEMENT_PLAIN[saju.chart.dayMaster.element]} 성향과 세 장의 흐름이 어우러집니다.`
       : "세 장의 카드가 시간의 이야기를 이어 줍니다.",
     GOAL_CLOSERS[answers.goal](present.card.nameKo),
     "",
