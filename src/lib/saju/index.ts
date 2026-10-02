@@ -38,3 +38,4 @@ export { applyYajaRules } from "./yaja";
 export type { YajaMode, YajaAdjustment } from "./yaja";
 export { computeSinsal, formatSinsalCompact } from "./sinsal";
 export type { SinsalHit, SinsalSet } from "./sinsal";
+export * from "./plain";
