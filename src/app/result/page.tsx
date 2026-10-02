@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import AuthGate from "@/components/AuthGate";
+import InterpretationView, {
+  InterpretationLoading,
+  InterpretationPageLoading,
+} from "@/components/InterpretationView";
 import TarotCardFace from "@/components/TarotCardFace";
 import { SAJU_DISCLAIMER } from "@/lib/saju";
 import type { SajuProfile } from "@/lib/saju";
@@ -30,11 +34,7 @@ import {
 export default function ResultPage() {
   return (
     <AuthGate requireSaju>
-      <Suspense
-        fallback={
-          <p className="text-center text-body animate-pulse">불러오는 중…</p>
-        }
-      >
+      <Suspense fallback={<InterpretationPageLoading />}>
         <ResultContent />
       </Suspense>
     </AuthGate>
@@ -46,6 +46,7 @@ function ResultContent() {
   const { userId } = useAuth();
   const [reading, setReading] = useState<ReadingResult | null>(null);
   const [saju, setSaju] = useState<SajuProfile | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
   const [source, setSource] = useState<"ai" | "template" | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ function ResultContent() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      setPageLoading(true);
       const id = searchParams.get("id");
       if (userId) await ensureMigrated(userId);
       let found: ReadingResult | null = null;
@@ -64,10 +66,11 @@ function ResultContent() {
           null;
       }
       if (!found) found = getLastReading(userId);
-      const saju = await loadSajuProfile(userId);
+      const sajuProfile = await loadSajuProfile(userId);
       if (cancelled) return;
       setReading(found);
-      setSaju(saju ?? getSajuProfile(userId));
+      setSaju(sajuProfile ?? getSajuProfile(userId));
+      setPageLoading(false);
     }
     void load();
     return () => {
@@ -151,6 +154,10 @@ function ResultContent() {
     };
   }, [reading, userId]);
 
+  if (pageLoading) {
+    return <InterpretationPageLoading />;
+  }
+
   if (!reading) {
     return (
       <div className="card-panel space-y-5 text-center !py-10 animate-fade-up">
@@ -184,9 +191,9 @@ function ResultContent() {
   });
 
   return (
-    <div className="space-y-8 animate-fade-up">
+    <div className="mx-auto max-w-lg space-y-6 animate-fade-up sm:space-y-8">
       <div className="text-center">
-        <p className="text-[11px] tracking-[0.22em] text-accent font-medium">
+        <p className="text-[11px] font-medium tracking-[0.22em] text-accent">
           RESULT · 타로+사주
         </p>
         <h1 className="mt-2 text-2xl font-bold text-heading">리딩 결과</h1>
@@ -196,13 +203,13 @@ function ResultContent() {
           {CONCERN_LABELS[reading.onboarding.concern]} ·{" "}
           {MOOD_LABELS[reading.onboarding.mood]}
         </p>
-        <p className="text-xs text-muted mt-1">
+        <p className="mt-1 text-xs text-muted">
           목표: {GOAL_LABELS[reading.onboarding.goal].split(" — ")[0]}
         </p>
       </div>
 
       <section className="card-panel !p-5 sm:!p-6">
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-heading">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-heading sm:text-lg">
           <span aria-hidden className="text-accent">
             ✧
           </span>
@@ -210,8 +217,10 @@ function ResultContent() {
         </h2>
         {saju ? (
           <div className="space-y-2 text-sm text-body">
-            <p className="font-medium text-heading">{saju.summaryText}</p>
-            <p>
+            <p className="font-medium leading-relaxed text-heading">
+              {saju.summaryText}
+            </p>
+            <p className="leading-relaxed">
               일간 {saju.chart.dayMaster.stemHan}({saju.chart.dayMaster.stemKo})
               · {saju.chart.dayMaster.yinYangLabel} ·{" "}
               {saju.chart.dayMaster.elementLabel}
@@ -220,7 +229,9 @@ function ResultContent() {
                 — {saju.chart.dayMaster.elementTrait}
               </span>
             </p>
-            <p className="text-xs text-muted">{SAJU_DISCLAIMER}</p>
+            <p className="text-xs leading-relaxed text-muted">
+              {SAJU_DISCLAIMER}
+            </p>
             <Link
               href="/saju"
               className="inline-block text-xs text-accent hover:underline"
@@ -239,7 +250,7 @@ function ResultContent() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-center text-lg font-semibold text-heading flex items-center justify-center gap-2">
+        <h2 className="flex items-center justify-center gap-2 text-center text-base font-semibold text-heading sm:text-lg">
           <span aria-hidden className="text-accent">
             ✦
           </span>
@@ -260,16 +271,14 @@ function ResultContent() {
 
       <section className="card-panel !p-5 sm:!p-7">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-heading">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-heading sm:text-lg">
             <span aria-hidden className="text-accent">
               ✧
-            </span>{" "}
-            퓨전 해석
+            </span>
+            해석
           </h2>
           {loadingAi ? (
-            <span className="text-xs text-muted animate-pulse">
-              AI가 해석을 작성하는 중…
-            </span>
+            <span className="animate-pulse text-xs text-muted">작성 중…</span>
           ) : source === "ai" ? (
             <span
               className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
@@ -290,33 +299,25 @@ function ResultContent() {
           ) : null}
         </div>
 
-        {loadingAi && (
-          <div
-            className="mb-4 rounded-xl border border-dashed px-4 py-3 text-sm text-body"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <p className="animate-pulse">
-              사주 기운과 카드를 읽고 있습니다. 잠시만 기다려 주세요…
-            </p>
-          </div>
+        {loadingAi ? (
+          <InterpretationLoading label="해석을 정리하는 중…" />
+        ) : (
+          <>
+            {aiError && (
+              <p className="mb-3 text-xs leading-relaxed text-muted" role="status">
+                {aiError}
+              </p>
+            )}
+            <InterpretationView text={reading.interpretation} />
+          </>
         )}
-
-        {aiError && !loadingAi && (
-          <p className="mb-3 text-xs text-muted" role="status">
-            {aiError}
-          </p>
-        )}
-
-        <div className="whitespace-pre-wrap text-sm leading-[1.75] text-body">
-          {reading.interpretation}
-        </div>
       </section>
 
       <p className="text-center text-xs text-muted">
         이 리딩은 자동으로 기록에 저장되었습니다.
       </p>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:flex-wrap">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
         <Link href="/draw" className="btn-primary">
           다시 뽑기
         </Link>
