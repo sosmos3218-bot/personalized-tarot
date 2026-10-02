@@ -1,9 +1,9 @@
 import {
   BRANCHES,
-  ELEMENT_LABELS,
   ELEMENT_TRAITS,
   type Element,
 } from "@/lib/saju/constants";
+import { ELEMENT_PLAIN } from "@/lib/saju/plain";
 import { getDayPillarForSolarDate } from "@/lib/saju/compute";
 import type { SajuProfile } from "@/lib/saju/types";
 import { formatSeoulDateKo, getSeoulTodayYmd } from "./date";
@@ -29,12 +29,12 @@ const CONTROLS: Record<Element, Element> = {
 };
 
 const RELATION_LABELS: Record<ElementRelation, string> = {
-  same: "비화(比和) — 같은 기운",
-  generates: "내가 생함 — 표현·확장",
-  generated_by: "생을 받음 — 충전·지원",
-  controls: "내가 극함 — 정리·주도",
-  controlled_by: "극을 받음 — 긴장·조심",
-  neutral: "중립",
+  same: "비슷한 흐름 — 익숙한 리듬",
+  generates: "내가 밀어 줌 — 표현·확장",
+  generated_by: "도움을 받음 — 충전·지원",
+  controls: "정리하는 날 — 결단·주도",
+  controlled_by: "압박이 느껴짐 — 긴장·조심",
+  neutral: "담담한 중간",
 };
 
 function relationOf(self: Element, today: Element): ElementRelation {
@@ -48,7 +48,7 @@ function relationOf(self: Element, today: Element): ElementRelation {
 
 const ENERGY_TONES: Record<ElementRelation, string[]> = {
   same: [
-    "오늘 일주의 기운이 일간과 닮아, 본연의 리듬이 잘 드러납니다.",
+    "오늘의 흐름이 나와 닮아, 본연의 리듬이 잘 드러납니다.",
     "비슷한 결의 에너지가 겹쳐, 익숙한 방식으로 흐름을 타기 좋습니다.",
   ],
   generates: [
@@ -182,11 +182,11 @@ export function buildDailyFortune(
     dateYmd,
     dateLabel: formatSeoulDateKo(dateYmd),
     dayMasterElement: dm.element,
-    dayMasterLabel: dm.elementLabel,
+    dayMasterLabel: ELEMENT_PLAIN[dm.element],
     dayMasterStem: `${dm.stemHan}(${dm.stemKo})`,
     todayPillar,
     todayElement,
-    todayElementLabel: ELEMENT_LABELS[todayElement],
+    todayElementLabel: ELEMENT_PLAIN[todayElement],
     relation,
     relationLabel: RELATION_LABELS[relation],
     luckScore: luckScoreFor(seed, relation),
@@ -202,9 +202,9 @@ export function dailyFortunePlainText(f: DailyFortune): string {
   return [
     `## 오늘의 기운`,
     `${f.dateLabel} · 서울 기준`,
-    `일간 ${f.dayMasterStem} — ${f.dayMasterLabel} (${ELEMENT_TRAITS[f.dayMasterElement]})`,
-    `오늘 일주 ${f.todayPillar.label} · 지지 오행 ${f.todayElementLabel}`,
-    `관계: ${f.relationLabel}`,
+    `「일간(나를 나타내는 기운)」 ${f.dayMasterStem} — ${f.dayMasterLabel} (${ELEMENT_TRAITS[f.dayMasterElement]})`,
+    `오늘의 날 기둥 ${f.todayPillar.label} · ${f.todayElementLabel} 기운`,
+    `나와 오늘의 관계: ${f.relationLabel}`,
     `운세 점수: ${f.luckScore}`,
     "",
     f.energyTone,
