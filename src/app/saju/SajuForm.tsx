@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import ProgressSteps from "@/components/ProgressSteps";
-import { buildSajuProfile, SAJU_DISCLAIMER } from "@/lib/saju";
+import {
+  buildSajuProfile,
+  dayMasterPlain,
+  SAJU_DISCLAIMER,
+  SAJU_DISCLAIMER_DETAIL,
+  sajuDetailLines,
+} from "@/lib/saju";
 import type { CalendarType, Gender, SajuProfile } from "@/lib/saju";
 import { getSajuProfile } from "@/lib/storage";
 import { loadSajuProfile, syncSaveSaju } from "@/lib/sync";
@@ -132,8 +138,11 @@ export default function SajuForm() {
           사주를 먼저 등록해 주세요. 저장 후 오늘의 운세를 추천드려요.
         </p>
       )}
-      <div className="text-center">
-        <h1 className="text-xl font-bold text-heading">사주 프로필</h1>
+      <div className="text-center space-y-1.5">
+        <h1 className="text-xl font-bold text-heading">나의 출생 기운</h1>
+        <p className="text-sm text-body">
+          생년월일로 오늘의 운세에 쓸 기본 흐름을 준비해요.
+        </p>
       </div>
       <div className="card-panel space-y-4 !p-4">
         <div className="grid grid-cols-3 gap-2">
@@ -234,33 +243,34 @@ export default function SajuForm() {
       {preview && (
         <div className="card-panel space-y-2 !p-5 text-sm">
           <p className="font-medium text-heading">{preview.summaryText}</p>
-          <p className="text-body">
-            일간 {preview.chart.dayMaster.stemHan}({preview.chart.dayMaster.stemKo}) ·{" "}
-            {preview.chart.dayMaster.yinYangLabel} · {preview.chart.dayMaster.elementLabel}
+          <p className="text-body leading-relaxed">
+            {dayMasterPlain(preview.chart)}
           </p>
-          {preview.chart.trueSolar && (
-            <p className="text-xs text-muted">
-              진태양시 {String(preview.chart.trueSolar.hour).padStart(2, "0")}:
-              {String(preview.chart.trueSolar.minute).padStart(2, "0")} (보정{" "}
-              {preview.chart.trueSolar.totalOffsetMin}분)
-            </p>
-          )}
-          {preview.chart.yaja?.applied && (
-            <p className="text-xs text-muted">
-              {preview.chart.yaja.label} — {preview.chart.yaja.note}
-            </p>
-          )}
-          {preview.chart.sinsal && preview.chart.sinsal.items.length > 0 && (
-            <div className="text-xs space-y-1 border-t pt-2" style={{ borderColor: "var(--card-border)" }}>
-              <p className="text-muted">신살 · 간이</p>
-              {preview.chart.sinsal.items.map((s) => (
-                <p key={s.key + s.where.join("")}>
-                  <span className="text-heading font-medium">{s.nameKo}</span>
-                  <span className="text-muted"> ({s.where.join("·")}) — {s.brief}</span>
-                </p>
+          <details className="text-xs text-muted pt-1">
+            <summary className="cursor-pointer select-none text-accent hover:underline">
+              자세히
+            </summary>
+            <div className="mt-2 space-y-1.5 border-t pt-2" style={{ borderColor: "var(--card-border)" }}>
+              {sajuDetailLines(preview.chart).map((line) => (
+                <p key={line}>{line}</p>
               ))}
+              {preview.chart.sinsal && preview.chart.sinsal.items.length > 0 && (
+                <div className="space-y-1 pt-1">
+                  <p className="text-muted">참고 상징 (간이)</p>
+                  {preview.chart.sinsal.items.map((s) => (
+                    <p key={s.key + s.where.join("")}>
+                      <span className="text-heading font-medium">{s.nameKo}</span>
+                      <span className="text-muted">
+                        {" "}
+                        ({s.where.join("·")}) — {s.brief}
+                      </span>
+                    </p>
+                  ))}
+                </div>
+              )}
+              <p className="pt-1">{SAJU_DISCLAIMER_DETAIL}</p>
             </div>
-          )}
+          </details>
           <p className="text-xs text-muted pt-1">{SAJU_DISCLAIMER}</p>
         </div>
       )}
