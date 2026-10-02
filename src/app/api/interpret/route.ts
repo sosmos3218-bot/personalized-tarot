@@ -26,9 +26,15 @@ interface InterpretBody {
 }
 
 const SYSTEM_PROMPT =
-  "You are a Korean tarot+saju fusion reader. Use everyday Korean first. " +
-  "Gloss jargon like \u300cilgan (my energy)\u300d when needed. " +
-  "Respond in Korean with sections: ## Today energy / ## Tarot / ## Together message.";
+  "당신은 한국어로 말하는 타로+사주 퓨전 리더입니다.\n" +
+  "과장된 예언·공포 조장 없이, 짧고 따뜻한 톤으로 안내합니다.\n" +
+  "의료·법률·재정 확정 조언은 피합니다. 사주는 참고용입니다.\n\n" +
+  "언어 규칙:\n" +
+  "-일상 한국어를 먼저 쓰세요.\n" +
+  "-사주 용어가 필요하면 「일간(나를 나타내는 기운)」처럼 짧게만 풀어 주세요.\n" +
+  "-십신·지장간·진태양시·야자시·신살 등 전문 용어는 피하세요.\n\n" +
+  "응답은 반드시 아래 세 개의 마크다운 제목으로 나누세요:\n" +
+  "## 오늘의 기운\n## 타로\n## 함께 읽는 메시지";
 
 function buildUserPrompt(
   cards: DrawnCard[],
@@ -50,19 +56,19 @@ function buildUserPrompt(
     })
     .join("\n");
   return (
-    "Spread: " +
+    "스프레드: " +
     SPREAD_LABELS[spread] +
-    "\nConcern: " +
+    "\n고민: " +
     CONCERN_LABELS[onboarding.concern] +
-    "\nMood: " +
+    "\n기분: " +
     MOOD_LABELS[onboarding.mood] +
-    "\nGoal: " +
+    "\n목표: " +
     GOAL_LABELS[onboarding.goal] +
-    "\n\n[Saju]\n" +
+    "\n\n[출생 기운]\n" +
     sajuPromptBlock(saju || null) +
-    "\n\n[Cards]\n" +
+    "\n\n[타로 카드]\n" +
     cardLines +
-    "\n\nWrite fusion reading in everyday Korean with the three ## sections."
+    "\n\n위 정보를 바탕으로 일상 한국어로 퓨전 해석을 쓰고, 세 개의 ## 제목을 지키세요."
   );
 }
 
@@ -70,20 +76,20 @@ export async function POST(req: Request) {
   const authResult = await auth();
   const userId = authResult.userId;
   if (!userId) {
-    return NextResponse.json({ error: "login required" }, { status: 401 });
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
   let body: InterpretBody;
   try {
     body = (await req.json()) as InterpretBody;
   } catch {
-    return NextResponse.json({ error: "bad body" }, { status: 400 });
+    return NextResponse.json({ error: "요청 본문을 읽을 수 없습니다." }, { status: 400 });
   }
   const cards = body.cards;
   const onboarding = body.onboarding;
   const spread = body.spread || "one";
   const saju = body.saju || null;
   if (!cards || !cards.length || !onboarding || !onboarding.concern || !onboarding.mood || !onboarding.goal) {
-    return NextResponse.json({ error: "need cards and onboarding" }, { status: 400 });
+    return NextResponse.json({ error: "카드와 온보딩 정보가 필요합니다." }, { status: 400 });
   }
   const templateText = buildInterpretation(cards, onboarding, spread, saju);
   if (!canAttemptAi()) {
@@ -91,7 +97,7 @@ export async function POST(req: Request) {
       source: "template" as const,
       text: templateText,
       reason: "no_credentials" as const,
-      message: "AI unavailable; showing basic reading.",
+      message: "AI를 쓸 수 없어 기본 해석을 보여드립니다.",
     });
   }
   try {
@@ -107,7 +113,7 @@ export async function POST(req: Request) {
         source: "template" as const,
         text: templateText,
         reason: "empty" as const,
-        message: "Empty AI response; showing basic reading.",
+        message: "AI 응답이 비어 기본 해석을 보여드립니다.",
       });
     }
     return NextResponse.json({ source: "ai" as const, text: text.trim() });
