@@ -3,7 +3,7 @@
 export type FlowStep = "saju" | "today" | "reading";
 
 const STEPS: { id: FlowStep; label: string; hint: string }[] = [
-  { id: "saju", label: "사주", hint: "출생 정보" },
+  { id: "saju", label: "기운", hint: "출생 정보" },
   { id: "today", label: "오늘의 운세", hint: "일일 리포트" },
   { id: "reading", label: "맞춤 리딩", hint: "선택" },
 ];
@@ -93,7 +93,7 @@ export default function ProgressSteps({
         })}
       </ol>
       <p className="mt-2 text-center text-[11px] text-muted leading-relaxed">
-        사주 등록 후{" "}
+        출생 기운 등록 후{" "}
         <strong className="font-medium text-heading">오늘의 운세</strong>를
         먼저 볼 수 있어요. 맞춤 리딩은 선택입니다.
       </p>

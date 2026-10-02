@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "별빛 타로 — 타로+사주 퓨전",
   description:
-    "사주(만세력) 기운과 타로 카드를 결합한 개인화 퓨전 리딩. 메이저 아르카나와 일간·오행으로 오늘의 메시지를 받아보세요.",
+    "생년월일로 보는 나의 기운과 타로 카드를 결합한 개인화 퓨전 리딩. 메이저 아르카나와 함께 오늘의 메시지를 받아보세요.",
   applicationName: "별빛 타로",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
