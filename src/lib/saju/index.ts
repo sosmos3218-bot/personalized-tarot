@@ -2,11 +2,13 @@ export * from "./constants";
 export * from "./types";
 export {
   computeSaju,
-  formatSajuSummary,
   buildSajuProfile,
-  sajuPromptBlock,
   getDayPillarForSolarDate,
 } from "./compute";
+export {
+  formatSajuSummaryPlain as formatSajuSummary,
+  sajuPromptBlockPlain as sajuPromptBlock,
+} from "./plain";
 export {
   lunarToSolar,
   solarToLunar,
