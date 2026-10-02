@@ -32,26 +32,21 @@ export interface DayMaster {
 }
 
 export interface SajuInput {
-  /** YYYY-MM-DD (양력 또는 음력, calendarType에 따름) */
+  /** YYYY-MM-DD */
   birthDate: string;
-  /** HH:mm, 없으면 시주 생략 */
+  /** HH:mm */
   birthTime?: string | null;
   timeUnknown?: boolean;
   gender?: Gender;
   calendarType: CalendarType;
-  /** 출생지 경도(동경 °). 없으면 서울 기본 */
   longitudeE?: number | null;
-  /** 진태양시 적용 (기본 true — 시각 있을 때) */
   useTrueSolar?: boolean;
-  /** 야자시 규칙 (기본 next_day) */
   yajaMode?: YajaMode;
 }
 
 export interface PillarTenGods {
-  /** 천간 십신 */
   stemKo: string;
   stemHan: string;
-  /** 지지 정기(本氣) 십신 */
   branchKo: string;
   branchHan: string;
 }
@@ -66,9 +61,7 @@ export interface TenGodSet {
 export interface PillarJijanggan {
   branchHan: string;
   branchKo: string;
-  /** 여기 → 중기 → 본기 */
   stems: HiddenStem[];
-  /** 짧은 표기 예: 戊(여) · 丙(중) · 甲(본) */
   compact: string;
 }
 
@@ -82,7 +75,6 @@ export interface JijangganSet {
 export type DaeunDirection = "forward" | "backward";
 
 export interface DaeunPillarInfo {
-  /** 0부터 */
   index: number;
   stemIndex: number;
   branchIndex: number;
@@ -91,19 +83,15 @@ export interface DaeunPillarInfo {
   branchHan: string;
   branchKo: string;
   label: string;
-  /** 만 나이 시작(포함) */
   ageFrom: number;
-  /** 만 나이 끝(포함) */
   ageTo: number;
 }
 
 export interface DaeunSet {
   direction: DaeunDirection;
   directionLabel: string;
-  /** 연간 음양 */
   yearStemYinYang: YinYang;
   startAge: number;
-  /** 절입까지 일수(근사) */
   daysToBoundary: number;
   boundaryTermName: string;
   pillars: DaeunPillarInfo[];
@@ -115,27 +103,18 @@ export interface SajuChart {
   day: Pillar;
   hour: Pillar | null;
   dayMaster: DayMaster;
-  /** 일간 기준 십신. 구 저장본에는 없을 수 있음 */
   tenGods?: TenGodSet;
-  /** 지지 지장간. 구 저장본에는 없을 수 있음 */
   jijanggan?: JijangganSet;
-  /** 대운. 성별 미지정이면 null */
   daeun?: DaeunSet | null;
-  /** 신살 (도화·화개·역마·공망·천을귀인) */
   sinsal?: SinsalSet;
-  /** 진태양시 보정 결과 (시각 있을 때) */
   trueSolar?: TrueSolarResult | null;
-  /** 야자시 적용 결과 */
   yaja?: YajaAdjustment | null;
-  /** 계산에 사용한 양력 날짜 YYYY-MM-DD */
   solarDate: string;
-  /** 입력 음력 날짜 (해당 시) */
   lunarDate?: string;
   calendarType: CalendarType;
   birthTime?: string | null;
   timeUnknown: boolean;
   gender: Gender;
-  /** MVP 한계 고지 */
   disclaimer: string;
   computedAt: string;
 }
@@ -143,10 +122,9 @@ export interface SajuChart {
 export interface SajuProfile {
   input: SajuInput;
   chart: SajuChart;
-  /** 해석/UI용 한 줄 요약 */
   summaryText: string;
   updatedAt: string;
 }
 
 export const SAJU_DISCLAIMER =
-  "MVP 만세력은 참고용입니다. 절기는 태양 황경 근사(수 시간 오차 가능)이고, 시각을 모르면 정오로 경계를 봅니다. 진태양시는 경도(기본 서울)·균시차 Spencer 근사, 야자시(23시)는 다음날 일주 관례, 신살은 도화·화개·역마·공망·천을귀인 간이 규칙입니다. 십신·지장간·대운도 간이이며 전문 명리·상담을 대체하지 않습니다.";
+  "\ucd9c\uc0dd \uc815\ubcf4\ub85c \uacc4\uc0b0\ud55c \ucc38\uace0\uc6a9 \ud750\ub984\uc785\ub2c8\ub2e4. \uc804\ubb38 \uba85\ub9ac\u00b7\uc0c1\ub2f4\uc744 \ub300\uccb4\ud558\uc9c0 \uc54a\uc544\uc694.";
