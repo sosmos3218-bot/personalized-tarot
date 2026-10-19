@@ -8,8 +8,8 @@ export const LEGAL = {
   operatorName: "[운영자 이름]",
   /** TODO: 개인정보 보호책임자 이름 (운영자와 같으면 동일하게 입력) */
   privacyOfficer: "[개인정보 보호책임자 이름]",
-  /** TODO: 문의 및 개인정보 관련 연락처 이메일 */
-  contactEmail: "[연락처 이메일]",
+  /** 문의 및 개인정보 관련 연락처 이메일 */
+  contactEmail: "sosmos3218@gmail.com",
   siteUrl: "https://personalized-tarot.vercel.app",
   effectiveDate: "2026년 10월 19일",
   effectiveDateIso: "2026-10-19",
