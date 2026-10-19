@@ -43,3 +43,8 @@ next-env.d.ts
 
 # clerk local keyless cache
 .clerk/
+
+# generated from scripts/brand-assets/*.b64 by `npm run prebuild`
+/public/icons/*.png
+/public/apple-touch-icon.png
+/public/favicon.ico
