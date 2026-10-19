@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { koKR } from "@clerk/localizations";
 import Header from "@/components/Header";
 import PwaRegister from "@/components/PwaRegister";
+import SiteFooter from "@/components/SiteFooter";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 import "./globals.css";
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "별빛 타로 — 타로+사주 퓨전",
+  title: "별빛 타로: 타로와 사주 퓨전",
   description:
     "생년월일로 보는 나의 기운과 타로 카드를 결합한 개인화 퓨전 리딩. 메이저 아르카나와 함께 오늘의 메시지를 받아보세요.",
   applicationName: "별빛 타로",
@@ -31,10 +32,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -79,6 +83,7 @@ export default function RootLayout({
             <main className="mx-auto max-w-3xl px-4 py-6 sm:py-10 pb-16">
               {children}
             </main>
+            <SiteFooter />
             <PwaRegister />
           </ThemeProvider>
         </ClerkProvider>

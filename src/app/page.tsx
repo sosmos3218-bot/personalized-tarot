@@ -15,6 +15,17 @@ export default function LandingPage() {
   const loggedIn = isLoaded && isSignedIn;
   const [hasSaju, setHasSaju] = useState(false);
   const [seenToday, setSeenToday] = useState(false);
+  const [accountDeleted, setAccountDeleted] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("accountDeleted") === "1") {
+      setAccountDeleted(true);
+      params.delete("accountDeleted");
+      const q = params.toString();
+      window.history.replaceState(null, "", q ? `/?${q}` : "/");
+    }
+  }, []);
 
   useEffect(() => {
     if (!loggedIn || !userId) {
@@ -46,6 +57,15 @@ export default function LandingPage() {
 
   return (
     <div className="space-y-10 sm:space-y-14">
+      {accountDeleted && (
+        <div
+          role="status"
+          className="card-panel !p-4 text-center text-sm text-heading"
+        >
+          계정과 모든 데이터가 삭제되었어요. 그동안 별빛 타로와 함께해 주셔서
+          고맙습니다.
+        </div>
+      )}
       <section className="pt-4 sm:pt-10 text-center animate-fade-up">
         <div
           className="mb-5 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] tracking-[0.22em] text-accent"

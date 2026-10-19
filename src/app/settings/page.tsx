@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import AuthGate from "@/components/AuthGate";
 import PushSettings from "@/components/PushSettings";
+import DeleteAccount from "@/components/DeleteAccount";
 
 interface Prefs {
   emailEnabled: boolean;
@@ -198,6 +199,23 @@ function SettingsForm() {
           리딩 기록
         </Link>
       </div>
+
+      <section className="card-panel space-y-2 !p-5">
+        <h2 className="text-sm font-semibold text-heading">약관 및 정책</h2>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <Link href="/privacy" className="text-accent underline">
+            개인정보처리방침
+          </Link>
+          <Link href="/terms" className="text-accent underline">
+            이용약관
+          </Link>
+          <Link href="/account-deletion" className="text-accent underline">
+            계정 삭제 안내
+          </Link>
+        </div>
+      </section>
+
+      <DeleteAccount />
     </div>
   );
 }
