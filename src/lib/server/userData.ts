@@ -283,3 +283,34 @@ export async function listUserIdsWithPush(): Promise<string[]> {
   } while (cursor);
   return [...ids];
 }
+
+/**
+ * Delete every blob stored for this user.
+ * Inventory of key patterns (all under users/{safeUserId}/):
+ *   history.json, saju.json, prefs.json, push-subscriptions.json,
+ *   daily/{YYYY-MM-DD}.json
+ * We list the whole prefix so any future keys are removed too.
+ */
+export async function deleteAllUserData(
+  userId: string
+): Promise<{ deleted: number; remaining: number }> {
+  const { list, del } = await import("@vercel/blob");
+  const prefix = `${userPath(userId)}/`;
+  let deleted = 0;
+  for (let pass = 0; pass < 3; pass++) {
+    const targets: string[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await list({ prefix, cursor, limit: 1000 });
+      for (const b of page.blobs) targets.push(b.url);
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor);
+    if (targets.length === 0) break;
+    for (let i = 0; i < targets.length; i += 100) {
+      await del(targets.slice(i, i + 100));
+    }
+    deleted += targets.length;
+  }
+  const check = await list({ prefix, limit: 10 });
+  return { deleted, remaining: check.blobs.length };
+}
