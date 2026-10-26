@@ -1,12 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { generateText } from "ai";
 import { NextResponse } from "next/server";
-import {
-  canAttemptAi,
-  classifyAiError,
-  getTarotModel,
-  getTarotProviderOptions,
-} from "@/lib/ai";
+import { canAttemptAi, generateTarotText } from "@/lib/ai";
 import { buildInterpretation } from "@/lib/interpretation";
 import { sajuPromptBlock } from "@/lib/saju";
 import type { SajuProfile } from "@/lib/saju";
@@ -106,32 +100,20 @@ export async function POST(req: Request) {
       message: "AI를 쓸 수 없어 기본 해석을 보여드립니다.",
     });
   }
-  try {
-    const result = await generateText({
-      model: getTarotModel(),
-      system: SYSTEM_PROMPT,
-      prompt: buildUserPrompt(cards, onboarding, spread, saju),
-      maxOutputTokens: 1600,
-      providerOptions: getTarotProviderOptions(),
-    });
-    const text = result.text;
-    if (!text || !text.trim()) {
-      return NextResponse.json({
-        source: "template" as const,
-        text: templateText,
-        reason: "empty" as const,
-        message: "AI 응답이 비어 기본 해석을 보여드립니다.",
-      });
-    }
-    return NextResponse.json({ source: "ai" as const, text: text.trim() });
-  } catch (err) {
-    const info = classifyAiError(err);
-    console.error("[interpret] AI failed:", info.reason, info.log);
-    return NextResponse.json({
-      source: "template" as const,
-      text: templateText,
-      reason: info.reason,
-      message: info.message,
-    });
+  const ai = await generateTarotText({
+    route: "interpret",
+    system: SYSTEM_PROMPT,
+    prompt: buildUserPrompt(cards, onboarding, spread, saju),
+    maxOutputTokens: 1600,
+  });
+  if (ai.ok) {
+    return NextResponse.json({ source: "ai" as const, text: ai.text, servedBy: ai.servedBy });
   }
+  console.error("[interpret] AI chain failed:", ai.fail.reason, ai.fail.log);
+  return NextResponse.json({
+    source: "template" as const,
+    text: templateText,
+    reason: ai.fail.reason,
+    message: ai.fail.message,
+  });
 }

@@ -1,12 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { generateText } from "ai";
 import { NextResponse } from "next/server";
-import {
-  canAttemptAi,
-  classifyAiError,
-  getTarotModel,
-  getTarotProviderOptions,
-} from "@/lib/ai";
+import { canAttemptAi, generateTarotText } from "@/lib/ai";
 import { sajuPromptBlock } from "@/lib/saju";
 import type { SajuProfile } from "@/lib/saju";
 
@@ -66,43 +60,27 @@ export async function POST(req: Request) {
     });
   }
 
-  try {
-    const result = await generateText({
-      model: getTarotModel(),
-      system: SYSTEM_PROMPT,
-      prompt:
-        "\ub0a0\uc9dc(\uc11c\uc6b8): " +
-        (body.dateYmd || "\uc624\ub298") +
-        "\n\n[\ucd9c\uc0dd \uae30\uc6b4]\n" +
-        sajuPromptBlock(body.saju || null) +
-        "\n\n[\uae30\ubcf8 \uc6b4\uc138]\n" +
-        fortunePlain +
-        "\n\n\uc704 \uae30\ubcf8 \uc6b4\uc138\ub97c \ubc14\ud0d5\uc73c\ub85c, \uc624\ub298\uc758 \uae30\uc6b4\uc744 2\u20134\ubb38\ub2e8\uc73c\ub85c \uc790\uc5f0\uc2a4\ub7fd\uac8c \ubcf4\uc644\ud574 \uc8fc\uc138\uc694.\n" +
-        "\ucd08\uc810\u00b7\uc8fc\uc758 \ucde8\uc9c0\ub97c \uc720\uc9c0\ud558\ub418 \uc77c\uc0c1 \ud55c\uad6d\uc5b4\ub85c \ubb38\uc7a5\ub9cc \ub2e4\ub4ec\uace0 \ud48d\ubd80\ud558\uac8c \ud558\uc138\uc694.",
-      maxOutputTokens: 700,
-      providerOptions: getTarotProviderOptions(),
-    });
-    const text = result.text;
-
-    if (!text || !text.trim()) {
-      return NextResponse.json({
-        source: "template" as const,
-        reason: "empty" as const,
-        message: "AI \uc751\ub2f5\uc774 \ube44\uc5b4 \uae30\ubcf8 \uc6b4\uc138\ub97c \uc720\uc9c0\ud569\ub2c8\ub2e4.",
-      });
-    }
-
-    return NextResponse.json({
-      source: "ai" as const,
-      text: text.trim(),
-    });
-  } catch (err) {
-    const info = classifyAiError(err);
-    console.error("[daily-interpret] AI failed:", info.reason, info.log);
-    return NextResponse.json({
-      source: "template" as const,
-      reason: info.reason,
-      message: info.message,
-    });
+  const ai = await generateTarotText({
+    route: "daily-interpret",
+    system: SYSTEM_PROMPT,
+    prompt:
+      "\ub0a0\uc9dc(\uc11c\uc6b8): " +
+      (body.dateYmd || "\uc624\ub298") +
+      "\n\n[\ucd9c\uc0dd \uae30\uc6b4]\n" +
+      sajuPromptBlock(body.saju || null) +
+      "\n\n[\uae30\ubcf8 \uc6b4\uc138]\n" +
+      fortunePlain +
+      "\n\n\uc704 \uae30\ubcf8 \uc6b4\uc138\ub97c \ubc14\ud0d5\uc73c\ub85c, \uc624\ub298\uc758 \uae30\uc6b4\uc744 2\u20134\ubb38\ub2e8\uc73c\ub85c \uc790\uc5f0\uc2a4\ub7fd\uac8c \ubcf4\uc644\ud574 \uc8fc\uc138\uc694.\n" +
+      "\ucd08\uc810\u00b7\uc8fc\uc758 \ucde8\uc9c0\ub97c \uc720\uc9c0\ud558\ub418 \uc77c\uc0c1 \ud55c\uad6d\uc5b4\ub85c \ubb38\uc7a5\ub9cc \ub2e4\ub4ec\uace0 \ud48d\ubd80\ud558\uac8c \ud558\uc138\uc694.",
+    maxOutputTokens: 700,
+  });
+  if (ai.ok) {
+    return NextResponse.json({ source: "ai" as const, text: ai.text, servedBy: ai.servedBy });
   }
+  console.error("[daily-interpret] AI chain failed:", ai.fail.reason, ai.fail.log);
+  return NextResponse.json({
+    source: "template" as const,
+    reason: ai.fail.reason,
+    message: ai.fail.message,
+  });
 }
