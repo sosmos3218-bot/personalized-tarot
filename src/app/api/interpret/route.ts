@@ -1,7 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
-import { canAttemptAi, classifyAiError, getTarotModel } from "@/lib/ai";
+import {
+  canAttemptAi,
+  classifyAiError,
+  getTarotModel,
+  getTarotProviderOptions,
+} from "@/lib/ai";
 import { buildInterpretation } from "@/lib/interpretation";
 import { sajuPromptBlock } from "@/lib/saju";
 import type { SajuProfile } from "@/lib/saju";
@@ -32,7 +37,8 @@ const SYSTEM_PROMPT =
   "언어 규칙:\n" +
   "-일상 한국어를 먼저 쓰세요.\n" +
   "-사주 용어가 필요하면 「일간(나를 나타내는 기운)」처럼 짧게만 풀어 주세요.\n" +
-  "-십신·지장간·진태양시·야자시·신살 등 전문 용어는 피하세요.\n\n" +
+  "-십신·지장간·진태양시·야자시·신살 등 전문 용어는 피하세요.\n" +
+  "-영어 단어나 다른 외국어를 섞지 말고 모든 문장을 한국어로만 쓰세요.\n\n" +
   "응답은 반드시 아래 세 개의 마크다운 제목으로 나누세요:\n" +
   "## 오늘의 기운\n## 타로\n## 함께 읽는 메시지";
 
@@ -106,6 +112,7 @@ export async function POST(req: Request) {
       system: SYSTEM_PROMPT,
       prompt: buildUserPrompt(cards, onboarding, spread, saju),
       maxOutputTokens: 1600,
+      providerOptions: getTarotProviderOptions(),
     });
     const text = result.text;
     if (!text || !text.trim()) {

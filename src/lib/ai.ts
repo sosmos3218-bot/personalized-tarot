@@ -3,11 +3,23 @@
  * Prefer AI_GATEWAY_API_KEY when set; on Vercel, OIDC (VERCEL / VERCEL_OIDC_TOKEN) also works.
  */
 
-const DEFAULT_MODEL = "inclusionai/ling-3.1-flash-free";
+const DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning-free";
 
 /** Gateway model id: env override or free default. */
 export function getTarotModel(): string {
   return process.env.TAROT_AI_MODEL?.trim() || DEFAULT_MODEL;
+}
+
+/**
+ * Provider options for tarot calls.
+ * Nemotron reasons by default and burns the whole output budget on hidden
+ * reasoning (empty text, finish=length), so turn reasoning off. Options are
+ * keyed by provider, so other models ignore this.
+ */
+export function getTarotProviderOptions(): {
+  nvidia: { reasoningEffort: string };
+} {
+  return { nvidia: { reasoningEffort: "none" } };
 }
 
 /**
